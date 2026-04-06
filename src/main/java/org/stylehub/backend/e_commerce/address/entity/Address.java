@@ -16,7 +16,7 @@ import java.util.UUID;
 public class Address {
 
     @Id
-    @UuidGenerator(style = UuidGenerator.Style.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "street_name",length = 50,columnDefinition = "varchar(50)")

@@ -1,10 +1,10 @@
 drop table if exists  product_item;
 
 create table product_item(
-  id binary(16) primary key not null ,
+  id uuid primary key ,
   color varchar(20) not null ,
   size varchar(3) not null,
-  product_id binary(16) not null ,
+  product_id uuid not null ,
   stock integer not null ,
   price decimal(10,2) not null ,
   sku varchar(30) not null ,

@@ -1,8 +1,8 @@
 drop table if exists cart;
 
 create table cart(
-    id binary(16) primary key not null ,
-    user_id binary(16) not null ,
+    id uuid primary key not null ,
+    user_id uuid not null ,
     cart_status varchar(20) default 'active',
     created_at timestamp ,
     updated_at timestamp,

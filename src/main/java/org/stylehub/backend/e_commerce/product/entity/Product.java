@@ -28,9 +28,21 @@ public class Product {
     @Column(name = "thumbnail",nullable = false)
     private String thumbnail;
 
+    @Column(name = "public_id",nullable = false)
+    private String publicId;
+
     @OneToMany(mappedBy = "product",
             cascade = {CascadeType.PERSIST, CascadeType.MERGE,CascadeType.REMOVE})
     private List<ProductItem>  productItems;
 
-
+    @Override
+    public String toString() {
+        return "Product{" +
+                "publicId='" + publicId + '\'' +
+                ", thumbnail='" + thumbnail + '\'' +
+                ", productDescription='" + productDescription + '\'' +
+                ", productName='" + productName + '\'' +
+                ", id=" + id +
+                '}';
+    }
 }

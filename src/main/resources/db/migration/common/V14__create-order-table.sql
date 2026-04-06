@@ -1,8 +1,8 @@
 drop table if exists orders;
 
 create table orders(
-    id binary(16) primary key not null ,
-    user_id binary(16) not null ,
+    id uuid primary key not null ,
+    user_id uuid not null ,
     order_status varchar(30) default 'PENDING',
     total_price decimal not null ,
     created_at timestamp not null,
