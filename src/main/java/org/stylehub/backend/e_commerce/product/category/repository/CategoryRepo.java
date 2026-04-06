@@ -1,0 +1,12 @@
+package org.stylehub.backend.e_commerce.product.category.repository;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.stylehub.backend.e_commerce.product.category.entity.Category;
+
+import java.util.UUID;
+
+public interface CategoryRepo extends JpaRepository<Category,Long> {
+    Page<Category> findByUsers_Id(UUID userId, Pageable pageable);
+}
