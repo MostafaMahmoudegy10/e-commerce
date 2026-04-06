@@ -1,15 +1,17 @@
 package org.stylehub.backend.e_commerce.user.entity.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
 public enum Role {
     USER ("user"),
     BRAND("brand");
 
     private final String roleName;
+
+    Role(String roleName) {
+        this.roleName = roleName;
+    }
 
     public static Role findByRoleName(String roleName){
         if(roleName.equalsIgnoreCase("user")){

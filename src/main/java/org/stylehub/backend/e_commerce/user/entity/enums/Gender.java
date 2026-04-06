@@ -3,7 +3,6 @@ package org.stylehub.backend.e_commerce.user.entity.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
 public enum Gender {
     MALE('M'),
@@ -11,6 +10,9 @@ public enum Gender {
 
     private final char code;
 
+    Gender(char code) {
+        this.code = code;
+    }
     // this method static to call it from class and to return the gender
     public static Gender fromCode(char code){
         if("M".equalsIgnoreCase(String.valueOf(code))){
