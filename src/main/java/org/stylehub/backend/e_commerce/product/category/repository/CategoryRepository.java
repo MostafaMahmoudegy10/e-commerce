@@ -7,6 +7,8 @@ import org.stylehub.backend.e_commerce.product.category.entity.Category;
 
 import java.util.UUID;
 
-public interface CategoryRepo extends JpaRepository<Category,Long> {
-    Page<Category> findByUsers_Id(UUID userId, Pageable pageable);
+public interface CategoryRepository extends JpaRepository<Category,UUID> {
+
+    boolean existsByCategoryNameIgnoreCase(String categoryName);
+
 }

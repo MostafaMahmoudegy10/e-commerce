@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.user.entity.User;
 import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 
@@ -26,15 +27,16 @@ public class Category {
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
-    private Category category;
+    private Category parentCategory;
 
     @Enumerated(EnumType.STRING)
     private Gender categoryGender;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "parentCategory")
     private List<Category> subCategory;
 
-    @ManyToMany(mappedBy = "categories")
-    private List<User>users=new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "brand_id")
+    private Brand brand;
 }
 

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.stylehub.backend.e_commerce.product.product_item.entity.ProductItem;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +28,9 @@ public class Product {
 
     @Column(name = "thumbnail",nullable = false)
     private String thumbnail;
+
+    @Column(nullable = false)
+    private BigDecimal price;
 
     @Column(name = "public_id",nullable = false)
     private String publicId;

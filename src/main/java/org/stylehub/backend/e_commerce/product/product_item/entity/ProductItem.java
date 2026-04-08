@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.stylehub.backend.e_commerce.image.entity.ProductItemImage;
 import org.stylehub.backend.e_commerce.product.entity.Product;
+import org.stylehub.backend.e_commerce.product.product_item.size.Size;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,16 +25,6 @@ public class ProductItem {
     @Column(name = "color", nullable = false,columnDefinition = "varchar(20)")
     private String color;
 
-    @Convert(converter = SizeConverter.class)
-    @Column(nullable = false)
-    private Size size;
-
-    @Column(nullable = false)
-    private Integer stock;
-
-    @Column(nullable = false)
-    private BigDecimal price;
-
     @Column(length = 30, nullable = false,columnDefinition = "varchar(30)")
     private String sku;
 
@@ -45,5 +36,15 @@ public class ProductItem {
     cascade = {CascadeType.PERSIST, CascadeType.MERGE,CascadeType.REMOVE})
     private List<ProductItemImage> productItemImages;
 
+    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "product_item_id")
+    private List<Size>sizeList;
 
+    @Override
+    public String toString() {
+        return "ProductItem{" +
+                "color='" + color + '\'' +
+                ", sku='" + sku + '\'' +
+                '}';
+    }
 }

@@ -8,7 +8,6 @@ import java.util.UUID;
 
 public record ProductDtoRequest(
         ProductDto productDto,
-        List<ProductItemDto> productItemList,
-        UUID productId
+        List<ProductItemDto> productItemList
 ) {
 }
