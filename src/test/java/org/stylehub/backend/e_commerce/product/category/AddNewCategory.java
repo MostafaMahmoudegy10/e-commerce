@@ -6,17 +6,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.multipart.MultipartFile;
+import org.stylehub.backend.e_commerce.image.dto.UploadResponse;
+import org.stylehub.backend.e_commerce.image.service.ImageService;
 import org.stylehub.backend.e_commerce.product.category.dto.CategoryCreateRequest;
 import org.stylehub.backend.e_commerce.product.category.dto.CategoryResponse;
 import org.stylehub.backend.e_commerce.product.category.entity.Category;
 import org.stylehub.backend.e_commerce.product.category.repository.CategoryRepository;
 import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
@@ -28,6 +34,9 @@ public class AddNewCategory {
 
     @MockitoBean
     private CategoryRepository categoryRepository;
+
+    @MockitoBean
+    private ImageService imageService;
 
 
     @Test
@@ -41,7 +50,8 @@ public class AddNewCategory {
                 "",
                   'M',
                   "new info",
-                  null
+                  null,
+                null
         );
         assertThrows(IllegalArgumentException.class,()
         ->categoryService.addNewCategory(request));
@@ -59,7 +69,9 @@ public class AddNewCategory {
                 "Bags",
                 'M',
                 "new info",
+                null,
                 null
+
         );
         when(this.categoryRepository.existsByCategoryNameIgnoreCase("Bags"))
                 .thenReturn(true);
@@ -80,6 +92,7 @@ public class AddNewCategory {
                 "Bags",
                 'M',
                 "new info",
+                null,
                 parentId
         );
 
@@ -98,12 +111,17 @@ public class AddNewCategory {
                 """)
     void testAddNewCategoryWithParentCategory(){
         UUID parentId = UUID.randomUUID();
+
+        MultipartFile file=mock(MultipartFile.class);
+
         CategoryCreateRequest request = new CategoryCreateRequest(
                 "Bags",
                 'M',
                 "new info",
+                file,
                 parentId
         );
+
         Category parentCategory =new Category();
         parentCategory.setCategoryName("Clothes");
         parentCategory.setParentCategory(null);
@@ -116,19 +134,21 @@ public class AddNewCategory {
         when(this.categoryRepository.findById(parentId))
                 .thenReturn(Optional.of(parentCategory));
 
-        Category childCategory =new Category();
-        childCategory.setCategoryName(request.categoryName());
-        childCategory.setParentCategory(parentCategory);
-        childCategory.setCategoryGender(Gender.fromCode(request.categoryGender()));
+        try {
+            when(imageService.uploadImage(file))
+                    .thenReturn( new UploadResponse("www","123"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-        when(this.categoryRepository.save(childCategory))
-                .thenReturn(childCategory);
+        when(categoryRepository.save(any(Category.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         CategoryResponse response= this.categoryService.addNewCategory(request);
 
-        assertThat(response.categoryName()).isEqualTo(childCategory.getCategoryName());
-        assertThat(response.categoryGender()).isEqualTo(childCategory.getCategoryGender());
-        assertThat(response.parentCategoryId()).isEqualTo(childCategory.getParentCategory().getId());
+        assertThat(response.categoryName()).isEqualTo("Bags");
+        assertThat(response.categoryGender()).isEqualTo(Gender.MALE);
+        assertThat(response.parentCategoryId()).isEqualTo(parentId);
     }
 
 }

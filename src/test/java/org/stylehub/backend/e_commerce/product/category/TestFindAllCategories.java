@@ -55,12 +55,16 @@ public class TestFindAllCategories {
            FindAllCategoryResponse mockResponseV1 =new FindAllCategoryResponse(
                    "BAGS",
                    Gender.MALE,
-                   UUID.randomUUID()
+                   UUID.randomUUID(),
+                   null,
+                   "no desc"
            );
         FindAllCategoryResponse mockResponseV2 =new FindAllCategoryResponse(
                 "BAGS",
                 Gender.MALE,
-                UUID.randomUUID()
+                UUID.randomUUID(),
+                null,
+                "no desc"
         );
           PageImpl page=new PageImpl(List.of(mockResponseV1,mockResponseV2));
            when(categoryRepository.findAllPageableCategory(PageRequest.of(0, 10)))

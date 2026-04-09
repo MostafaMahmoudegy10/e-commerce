@@ -2,6 +2,8 @@ package org.stylehub.backend.e_commerce.product.category;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,9 @@ public class CategoryService {
     private CategoryRepository categoryRepository;
 
     private ImageService imageService;
+
+    private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
+
 
     @Transactional
     public CategoryResponse addNewCategory(CategoryCreateRequest request) {
@@ -53,8 +58,8 @@ public class CategoryService {
         try {
             image = this.imageService.uploadImage(request.categoryIcon());
         }catch (IOException e){
-            e.printStackTrace();
-        }
+            log.error("Failed to upload category icon", e);
+            throw new RuntimeException("Failed to upload category icon", e);        }
 
         // create the category
         Category category = new Category();
