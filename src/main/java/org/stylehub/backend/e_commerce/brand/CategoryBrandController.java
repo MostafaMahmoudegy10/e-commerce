@@ -18,7 +18,6 @@ import java.util.Map;
 @RestController
 @RequestMapping(value = "api/v1/brands")
 @AllArgsConstructor
-@CrossOrigin("*")
 public class CategoryBrandController {
 
     private CategoryService categoryService;
