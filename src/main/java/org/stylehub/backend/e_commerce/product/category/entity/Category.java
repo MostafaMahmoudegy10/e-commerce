@@ -25,6 +25,9 @@ public class Category {
     @Column(name = "category_name", nullable = false)
     private String categoryName;
 
+    @Column(columnDefinition = "text", nullable = false)
+    private String categoryDescription;
+
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Category parentCategory;

@@ -7,6 +7,7 @@ import java.util.UUID;
 public record CategoryCreateRequest(
         String categoryName,
         Character categoryGender,
+        String categoryDescription,
         UUID  parentCategoryId
 ) {
 }

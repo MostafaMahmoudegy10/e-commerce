@@ -39,7 +39,8 @@ public class AddNewCategory {
     void testAddNewCategoryWithCategoryNameNull() {
         CategoryCreateRequest request = new CategoryCreateRequest(
                 "",
-                  Gender.MALE,
+                  'M',
+                  "new info",
                   null
         );
         assertThrows(IllegalArgumentException.class,()
@@ -56,7 +57,8 @@ public class AddNewCategory {
     void testAddNewCategoryWithCategoryNameAlreadyExists() {
         CategoryCreateRequest request = new CategoryCreateRequest(
                 "Bags",
-                Gender.MALE,
+                'M',
+                "new info",
                 null
         );
         when(this.categoryRepository.existsByCategoryNameIgnoreCase("Bags"))
@@ -76,7 +78,8 @@ public class AddNewCategory {
         UUID parentId = UUID.randomUUID();
         CategoryCreateRequest request = new CategoryCreateRequest(
                 "Bags",
-                Gender.MALE,
+                'M',
+                "new info",
                 parentId
         );
 
@@ -97,7 +100,8 @@ public class AddNewCategory {
         UUID parentId = UUID.randomUUID();
         CategoryCreateRequest request = new CategoryCreateRequest(
                 "Bags",
-                Gender.MALE,
+                'M',
+                "new info",
                 parentId
         );
         Category parentCategory =new Category();
@@ -115,7 +119,7 @@ public class AddNewCategory {
         Category childCategory =new Category();
         childCategory.setCategoryName(request.categoryName());
         childCategory.setParentCategory(parentCategory);
-        childCategory.setCategoryGender(request.categoryGender());
+        childCategory.setCategoryGender(Gender.fromCode(request.categoryGender()));
 
         when(this.categoryRepository.save(childCategory))
                 .thenReturn(childCategory);
