@@ -7,6 +7,8 @@ create table category(
     category_gender varchar(255),
     brand_id uuid ,
     category_description text ,
+    image_url text not null ,
+    public_id varchar(255) not null ,
     constraint FK_category_id
                      foreign key (parent_id)
                      references category(id),

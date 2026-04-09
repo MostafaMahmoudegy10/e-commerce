@@ -7,7 +7,9 @@ import java.util.UUID;
 public  record FindAllCategoryResponse(
           String categoryName,
           Gender categoryGender,
-          UUID id
+          UUID id,
+          String imageUrl,
+          String categoryDescription
   ){}
 
 

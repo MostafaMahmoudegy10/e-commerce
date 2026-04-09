@@ -35,6 +35,12 @@ public class Category {
     @Enumerated(EnumType.STRING)
     private Gender categoryGender;
 
+    @Column(name = "image_url", nullable = false)
+    private String imageUrl;
+
+    @Column(name = "public_id", nullable = false)
+    private String publicId;
+
     @OneToMany(mappedBy = "parentCategory")
     private List<Category> subCategory;
 

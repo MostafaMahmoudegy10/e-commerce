@@ -15,7 +15,8 @@ public interface CategoryRepository extends JpaRepository<Category,UUID> {
 
     @Query(value = """
              select new org.stylehub.backend.e_commerce.product.category.dto
-                        .FindAllCategoryResponse(c.categoryName,c.categoryGender,c.id) from Category c
+                        .FindAllCategoryResponse(c.categoryName,c.categoryGender,c.id
+                                   ,c.imageUrl,c.categoryDescription) from Category c
                         order by c.categoryName desc 
            """,
     countQuery = "select count (c) from Category c")
