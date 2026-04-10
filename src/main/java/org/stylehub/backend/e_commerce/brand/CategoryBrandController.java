@@ -14,15 +14,16 @@ import org.stylehub.backend.e_commerce.product.category.dto.CategoryResponse;
 import org.stylehub.backend.e_commerce.product.category.dto.FindAllCategoryResponse;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
-@RequestMapping(value = "api/v1/brands")
+@RequestMapping(value = "api/v1/brands/categories")
 @AllArgsConstructor
 public class CategoryBrandController {
 
     private CategoryService categoryService;
 
-    @PostMapping("/categories")
+    @PostMapping()
     public ResponseEntity<CategoryResponse>addNewCategory(
 //            @PathVariable UUID brandId,
             @ModelAttribute CategoryCreateRequest request){
@@ -30,11 +31,16 @@ public class CategoryBrandController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/categories")
+    @GetMapping()
     public ResponseEntity<Map<String,Object>> getAllCategories
             (@PageableDefault(page = 0, size = 10) Pageable pageable) {
         return ResponseEntity.ok(
                 this.categoryService.findAllCategories(pageable)
         );
+    }
+
+    @DeleteMapping()
+    public void deleteBrandCategory(@RequestParam("categoryId") UUID categoryId){
+        this.categoryService.deleteBrandCategoryById(categoryId);
     }
 }

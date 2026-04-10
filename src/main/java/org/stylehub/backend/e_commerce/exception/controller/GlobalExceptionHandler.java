@@ -1,4 +1,4 @@
-package org.stylehub.backend.e_commerce.exception;
+package org.stylehub.backend.e_commerce.exception.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

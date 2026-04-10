@@ -95,4 +95,8 @@ public class CategoryService {
                 parentId
         );
     }
+
+    public void deleteBrandCategoryById(UUID categoryId) {
+        this.categoryRepository.deleteById(categoryId);
+    }
 }
