@@ -128,13 +128,13 @@ public class CategoryService {
             category.setCategoryNameEn(patchRequest.categoryNameEn());
         }
         if(patchRequest.categoryNameAr()!=null&&!patchRequest.categoryNameAr().isBlank()){
-            category.setCategoryNameEn(patchRequest.categoryNameAr());
+            category.setCategoryNameAr(patchRequest.categoryNameAr());
         }
         if(patchRequest.categoryDescriptionEn()!=null&&!patchRequest.categoryDescriptionEn().isBlank()){
-            category.setCategoryNameEn(patchRequest.categoryNameEn());
+            category.setCategoryDescriptionEn(patchRequest.categoryNameEn());
         }
         if(patchRequest.categoryDescriptionAr()!=null&&!patchRequest.categoryDescriptionAr().isBlank()){
-            category.setCategoryNameEn(patchRequest.categoryDescriptionAr());
+            category.setCategoryDescriptionAr(patchRequest.categoryDescriptionAr());
         }
         return category;
     }
