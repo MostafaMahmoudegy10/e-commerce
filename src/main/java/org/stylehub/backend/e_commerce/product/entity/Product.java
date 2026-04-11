@@ -23,8 +23,20 @@ public class Product {
     @Column(nullable = false,name = "product_name")
     private String productName;
 
+    @Column(name = "product_name_ar")
+    private String productNameAr;
+
+    @Column(name = "product_name_en")
+    private String productNameEn;
+
     @Column(nullable = false,name = "product_description")
     private String productDescription;
+
+    @Column(name = "product_description_ar")
+    private String productDescriptionAr;
+
+    @Column(name = "product_description_en")
+    private String productDescriptionEn;
 
     @Column(name = "thumbnail",nullable = false)
     private String thumbnail;

@@ -23,6 +23,12 @@ public class Category {
     @Column(name = "category_name", nullable = false)
     private String categoryName;
 
+    @Column(name = "category_name_ar")
+    private String categoryNameAr;
+
+    @Column(name = "category_name_en")
+    private String categoryNameEn;
+
     @Column(columnDefinition = "text", nullable = false)
     private String categoryDescription;
 
