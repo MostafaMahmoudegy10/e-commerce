@@ -4,6 +4,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY ,
     external_user_id varchar(100) NOT NULL unique ,
     email VARCHAR(255) NOT NULL UNIQUE,
+    role varchar(255) not null ,
     is_profile_completed boolean default false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

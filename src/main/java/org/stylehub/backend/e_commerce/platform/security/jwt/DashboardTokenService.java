@@ -25,10 +25,10 @@ public class DashboardTokenService {
 
     private final AppJwtProperties  appJwtProperties;
 
-    private final BrandRepository brandRepository;
+    private final UserRepository userRepository;
 
     public TokenPair generateTokenPair(User user){
-        String role = (brandRepository.existsByUser_Id(user.getId()) ? "BRAND_OWNER":"CUSTOMER");
+        String role = (userRepository.existsById(user.getId()) ? user.getRole().toString():null);
 
         return new TokenPair(
                 createToken(user,role,"access",ACCESS_TOKEN_SECONDS),
@@ -55,11 +55,12 @@ public class DashboardTokenService {
     }
 
     private String createToken(User user, String role, String tokenType, long seconds) {
-        return createToken(user.getId().toString(), user.getEmail(), role, tokenType, seconds);
+        return createToken(user.getExternalUserId(), user.getEmail(), role, tokenType, seconds);
     }
 
     private String createToken(String subject, String email,
                                String role, String tokenType, long seconds) {
+
         Instant instant=Instant.now();
         JwtClaimsSet jwtClaimsSet= JwtClaimsSet.builder()
                 .subject(subject)

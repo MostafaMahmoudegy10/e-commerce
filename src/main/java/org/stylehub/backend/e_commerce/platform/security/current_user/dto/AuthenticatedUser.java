@@ -6,18 +6,12 @@ import java.util.Set;
 import java.util.UUID;
 
 public record AuthenticatedUser(
+        UUID userId,
         String externalId,
         String email,
         Set<String> roles,
         Boolean isProfileCompleted
         ) {
 
-    public  UUID BrandId(){
-       return roles.contains("BRAND_OWNER")?
-               UUID.fromString(externalId):null;
-    }
-    public  UUID CustomerId(){
-        return roles.contains("CUSTOMER")?
-               UUID.fromString(externalId):null;
-    }
+
 }

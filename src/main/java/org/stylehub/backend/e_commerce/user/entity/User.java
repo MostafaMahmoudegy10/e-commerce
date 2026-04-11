@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.TrueFalseConverter;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
+import org.stylehub.backend.e_commerce.user.entity.enums.Role;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -26,6 +27,10 @@ public class User {
 
     @Column(name = "email",nullable = false, unique = true, length = 100)
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role",nullable = false)
+    private Role role;
 
     @Column(name = "is_profile_completed",nullable = false)
     private Boolean isProfileCompleted;

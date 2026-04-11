@@ -31,8 +31,6 @@ public class Brand {
     @Column(name = "brand_image_url",nullable = false)
     private String brandImageUrl;
 
-    @Column(name = "public_id",nullable = false)
-    private  String publicId;
 
     @OneToOne
     @JoinColumn(name = "user_id")

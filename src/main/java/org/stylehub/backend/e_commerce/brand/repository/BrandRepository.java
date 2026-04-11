@@ -10,12 +10,12 @@ import java.util.UUID;
 
 public interface BrandRepository extends JpaRepository<Brand, UUID> {
 
-    boolean existsByUser_Id(UUID userId);
 
     @Query("""
-            select b from Brand b
-            where b.user.externalUserId=:externalUserId
-                        """)
-    Optional<Brand> findByUser_ExternalUserId(@Param("externalUserId") UUID idExternalUser);
-
+        select  b from Brand  b
+                inner join User  u
+            on b.user.id = u.id
+        where u.externalUserId=:externalId                                   
+        """)
+    Optional<Brand> findByUser_ExternalUserId(String externalId);
 }

@@ -18,6 +18,7 @@ import org.stylehub.backend.e_commerce.modules.catalog.category.dto.FindAllCateg
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
+import org.stylehub.backend.e_commerce.user.entity.User;
 import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 import org.stylehub.backend.e_commerce.user.repository.UserRepository;
 
@@ -33,7 +34,6 @@ public class CategoryService {
     private BrandRepository brandRepository;
     private CurrentUserProvider currentUserProvider;
     private ImageService imageService;
-    private UserRepository userRepository;
 
     private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
 
@@ -191,8 +191,10 @@ public class CategoryService {
     }
 
     private Brand getCurrentBrand() {
-        UUID brandId=currentUserProvider.getBrandId();
-        return this.brandRepository.findById(brandId)
+        // first we get the basic external Id
+        String basicUserId=this.currentUserProvider.externalId();
+
+        return this.brandRepository.findByUser_ExternalUserId(basicUserId)
                 .orElseThrow(()->new IllegalArgumentException("You need to setup your brand profile first"));
     }
 
