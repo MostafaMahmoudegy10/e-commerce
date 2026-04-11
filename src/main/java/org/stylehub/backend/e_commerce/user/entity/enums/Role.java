@@ -7,8 +7,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Role {
-    CUSTOMER,
-    BRAND_OWNER;
+    CUSTOMER("customer"),
+    BRAND_OWNER("brand_owner"),;
 
     private String value;
 
@@ -22,5 +22,6 @@ public enum Role {
         if("BRAND_OWNER".equalsIgnoreCase(value)){
             return BRAND_OWNER;
         }
+        return CUSTOMER;
     }
 }

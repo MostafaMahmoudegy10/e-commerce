@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value = "api/v1/categories")
+@RequestMapping(value = "api/v1/categories/brands")
 @AllArgsConstructor
 @PreAuthorize("hasAnyRole('CUSTOMER','BRAND_OWNER')")
 public class CategoryController {
@@ -23,7 +23,7 @@ public class CategoryController {
 
     @GetMapping()
     public ResponseEntity<Map<String,Object>>getAllCategories(
-            @RequestParam("brandId") UUID brandId,
+            @RequestParam("brandId") String brandId,
             @PageableDefault(page = 0,size=10) Pageable pageable
     ) {
         return ResponseEntity.ok(this.categoryService.findAllBrandCategories(pageable,brandId));

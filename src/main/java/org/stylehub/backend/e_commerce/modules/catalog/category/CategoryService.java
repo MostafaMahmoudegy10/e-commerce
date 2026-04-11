@@ -9,12 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.repository.BrandRepository;
-import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryPatchRequest;
+import org.stylehub.backend.e_commerce.modules.catalog.category.dto.*;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
-import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryCreateRequest;
-import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryResponse;
-import org.stylehub.backend.e_commerce.modules.catalog.category.dto.FindAllCategoryResponse;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
@@ -42,29 +39,32 @@ public class CategoryService {
     public CategoryResponse addNewCategory(CategoryCreateRequest request) {
         validateCategoryCreateRequest(request);
 
-        Brand ownerBrand= this.getCurrentBrand();
+        String externalId= this.getCurrentBrand();
 
         // check if the category requested is present or not
-        if(ownerBrand!=null){
+        if(externalId!=null){
            boolean exists = this.categoryRepository
-                .existsByCategoryNameEnAndBrand_Id(request.categoryNameEn(),ownerBrand.getId());
-           if(!exists){
-               throw new IllegalArgumentException("categoryName for your brand "+ownerBrand.getBrandName()+"already exists");
+                .existsByCategoryNameEnAndBrand_UserExternalUserId(request.categoryNameEn(),externalId);
+           if(exists){
+               throw new IllegalArgumentException("categoryName for your brand already exists");
            }
         }
         Category parentCategory=null;
         if(request.parentCategoryId()!=null){
             parentCategory =
-                    this.categoryRepository.findByIdAndBrand_Id(request.parentCategoryId(),
-                            ownerBrand.getId())
+                    this.categoryRepository.findByIdAndBrand_User_ExternalUserId(request.parentCategoryId(),
+                            externalId)
                             .orElseThrow(()-> new IllegalArgumentException("Category You Requested Not Present " +
                                     "For Your Brand Please Add It First And Try Again "));
         }
 
         UploadResponse image = this.imageService.uploadImage(request.categoryIcon());
 
+       Brand brand = this.brandRepository.findByUser_ExternalUserId(externalId).orElseThrow(
+                ()->new IllegalArgumentException("you need to complete yur profile"));
+
         Category category = new Category();
-        category.setBrand(ownerBrand);
+        category.setBrand(brand);
         category.setCategoryNameEn(request.categoryNameEn());
         category.setCategoryNameAr(request.categoryNameAr());
         category.setCategoryDescriptionAr(request.categoryDescriptionAr());
@@ -79,18 +79,18 @@ public class CategoryService {
         return toResponse(savedCategory);
     }
 
-    public Map<String,Object> findAllBrandCategories(Pageable pageable, UUID brandId){
+    public Map<String,Object> findAllBrandCategories(Pageable pageable, String brandId){
         // first get owner brand id
-        Page<Map<String,Object>> categoryPage
+        Page<findAllByBrandId> categoryPage
                 =this.categoryRepository.findAllByBrand_Id(brandId,pageable);
         return mapPaginatedResponse(categoryPage);
     }
 
     @Transactional
     public void deleteCategoryOfBrand(UUID categoryId){
-       Brand brand= this.getCurrentBrand();
+       String externalUserId= this.getCurrentBrand();
        Category category=
-               this.categoryRepository.findByIdAndBrand_Id(categoryId,brand.getId())
+               this.categoryRepository.findByIdAndBrand_User_ExternalUserId(categoryId,externalUserId)
                .orElseThrow(()->new IllegalArgumentException("Category You Requested Not Present " +
                                "For Your Brand Please Add It First And Try Again "));
        safelyDeleteCategoryIcon(category.getPublicId());
@@ -100,10 +100,10 @@ public class CategoryService {
     @Transactional
     public CategoryResponse patchBrandCategory(UUID categoryId, CategoryPatchRequest patchRequest){
         // first we need to get the  brand owner
-        Brand brand= this.getCurrentBrand();
+        String externalId= this.getCurrentBrand();
         // make sure this category is present for this brand
 
-        Category category= this.categoryRepository.findByIdAndBrand_Id(categoryId,brand.getId())
+        Category category= this.categoryRepository.findByIdAndBrand_User_ExternalUserId(categoryId,externalId)
                 .orElseThrow(()->new IllegalArgumentException("Category You Requested Not Present " +
                         "For Your Brand Please Add It First And Try Again "));
 
@@ -147,6 +147,7 @@ public class CategoryService {
     }
 
     private CategoryResponse toResponse(Category savedCategory) {
+        UUID parentCategoryId= savedCategory.getParentCategory()==null? null:savedCategory.getParentCategory().getId();
         return  new CategoryResponse(
                 savedCategory.getId(),
                 savedCategory.getCategoryNameEn(),
@@ -155,7 +156,7 @@ public class CategoryService {
                 savedCategory.getCategoryDescriptionAr(),
                 savedCategory.getImageUrl(),
                 savedCategory.getCategoryGender(),
-                savedCategory.getParentCategory().getId()
+                parentCategoryId
                 );
     }
 
@@ -180,7 +181,7 @@ public class CategoryService {
         }
     }
 
-    private Map<String, Object> mapPaginatedResponse(Page<Map<String, Object>> categoryPage) {
+    private Map<String, Object> mapPaginatedResponse(Page<findAllByBrandId> categoryPage) {
         return Map.of(
                 "data", categoryPage.getContent(),
                 "totalElements",categoryPage.getTotalElements(),
@@ -190,12 +191,12 @@ public class CategoryService {
         );
     }
 
-    private Brand getCurrentBrand() {
+    private String getCurrentBrand() {
         // first we get the basic external Id
         String basicUserId=this.currentUserProvider.externalId();
-
-        return this.brandRepository.findByUser_ExternalUserId(basicUserId)
+        this.brandRepository.findByUser_ExternalUserId(basicUserId)
                 .orElseThrow(()->new IllegalArgumentException("You need to setup your brand profile first"));
+        return basicUserId;
     }
 
 }

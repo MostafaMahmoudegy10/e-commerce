@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.FindAllCategoryResponse;
+import org.stylehub.backend.e_commerce.modules.catalog.category.dto.findAllByBrandId;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 
 import java.util.Map;
@@ -16,24 +17,27 @@ public interface CategoryRepository extends JpaRepository<Category,UUID> {
 
 
     // Find if a categoryName is persent or not
-    boolean existsByCategoryNameEnAndBrand_Id(@Param("categoryEn")
-              String categoryEn, @Param("brandId")UUID brandId);
+    boolean existsByCategoryNameEnAndBrand_UserExternalUserId(@Param("categoryEn")
+              String categoryEn, @Param("externalUserId")String externalUserId);
 
     // this query will return the categories of a brand
     @Query("""
-          select c.id,c.categoryNameEn,c.categoryNameAr,
+          select new org.stylehub.backend.e_commerce.modules.catalog.category.dto.findAllByBrandId(c.id,c.categoryNameEn,c.categoryNameAr,
                     c.categoryDescriptionEn,
-                    c.categoryDescriptionAr,c.imageUrl    
+                    c.categoryDescriptionAr,c.imageUrl)
                from Category c
-                     where c.brand.id=:userId                           
+                     inner join Brand b 
+                            on b.id =c.brand.id
+                                      inner join User u
+                                                on u.externalUserId=:externalId                
            """)
-    Page<Map<String,Object>> findAllByBrand_Id(@Param("userId") UUID brandId, Pageable pageable);
+    Page<findAllByBrandId> findAllByBrand_Id(@Param("externalId") String externalId, Pageable pageable);
 
 
     @Query("""
            select c from Category c 
-                      where c.id=:categoryId and c.brand.id=:brandId
+                      where c.id=:categoryId and c.brand.user.externalUserId=:externalUserId
                       """)
-    Optional<Category> findByIdAndBrand_Id(@Param("categoryId") UUID categoryId,
-                                        @Param("brandId")   UUID brandId);
+    Optional<Category> findByIdAndBrand_User_ExternalUserId(@Param("categoryId") UUID categoryId,
+                                        @Param("externalUserId")   String externalId);
 }

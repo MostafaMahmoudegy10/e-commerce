@@ -10,7 +10,6 @@ import org.stylehub.backend.e_commerce.user.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
-
 public class UserSyncService {
 
     private final UserRepository userRepository;
@@ -33,14 +32,9 @@ public class UserSyncService {
                     newUser.setRole(Role.valueOf(
                             currentUserProvider.getRoles().stream().findFirst().orElse("CUSTOMER")
                     ));
-                    newUser.setIsProfileCompleted(false); // الأفضل كده
+                    newUser.setIsProfileCompleted(true);
                     return this.userRepository.save(newUser);
                 });
     }
 
-    public boolean checkIsCompleted(String email) {
-        return userRepository.findByEmail(email)
-                .map(User::getIsProfileCompleted)
-                .orElse(false);
-    }
 }

@@ -8,7 +8,7 @@ public record CustomerProfileSetupRequest(
         String lastName,
         String phoneNumber,
         String bio,
-        Gender gender,
+        Character gender,
         String profileImageUrl
 ) {
 }

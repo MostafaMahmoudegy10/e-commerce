@@ -8,6 +8,7 @@ import org.stylehub.backend.e_commerce.modules.customer.profile.entity.CustomerP
 import org.stylehub.backend.e_commerce.modules.customer.profile.repository.CustomerProfileRepository;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.user.entity.User;
+import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 import org.stylehub.backend.e_commerce.user.service.UserSyncService;
 
 import java.util.Map;
@@ -40,7 +41,7 @@ public class CustomerProfileService {
         profile.setLastName(request.lastName());
         profile.setPhoneNumber(request.phoneNumber());
         profile.setBio(request.bio());
-        profile.setGender(request.gender());
+        profile.setGender(Gender.fromCode(request.gender()));
         profile.setProfileImageUrl(request.profileImageUrl());
 
         CustomerProfile savedProfile = customerProfileRepository.save(profile);
