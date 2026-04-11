@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.stylehub.backend.e_commerce.modules.catalog.category.CategoryService;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryCreateRequest;
+import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryPatchRequest;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryResponse;
 
 import java.util.Map;
@@ -32,13 +33,18 @@ public class BrandOwnerCategoryController {
     @GetMapping()
     public ResponseEntity<Map<String, Object>> getAllCategories
             (@PageableDefault(page = 0, size = 10) Pageable pageable) {
-        return ResponseEntity.ok(
-                this.categoryService.findAllCategories(pageable)
-        );
+        return ResponseEntity.ok(this.categoryService.findAllBrandCategories(pageable));
     }
 
-    @DeleteMapping()
-    public void deleteBrandCategory(@RequestParam("categoryId") UUID categoryId) {
+    @DeleteMapping("/{categoryId}")
+    public ResponseEntity<Void> deleteBrandCategory(@PathVariable UUID categoryId) {
         this.categoryService.deleteBrandCategoryById(categoryId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{categoryId}")
+    public ResponseEntity<CategoryResponse> patchCategory(@PathVariable UUID categoryId,
+                                                          @ModelAttribute CategoryPatchRequest request) {
+        return ResponseEntity.ok(categoryService.patchBrandCategory(categoryId, request));
     }
 }
