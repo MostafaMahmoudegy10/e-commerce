@@ -70,7 +70,7 @@ public class OtpService {
         String emailHtml=this.otpTemplateService.buildOtpEmailTemplate(
                 generateOtpRequest.recipient(),otp,expiryMinutes
         );
-        emailService.sendEmail(generateOtpRequest.recipient(),"Login With Otp",
+        emailService.sendHtmlEmail(generateOtpRequest.recipient(),"Your StyleHub verification code",
                 emailHtml);
 
         return new GenerateOtpResponse(
