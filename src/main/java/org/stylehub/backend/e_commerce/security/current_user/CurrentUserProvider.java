@@ -27,7 +27,9 @@ public class CurrentUserProvider {
                     authority.getAuthority().replace("ROLE_","")
                 ).collect(Collectors.toSet());
 
-        return new AuthenticatedUser(externalId,email,roles);
+        Boolean isProfileCompleted=jwt.getClaimAsBoolean("isProfileComplete");
+
+        return new AuthenticatedUser(externalId,email,roles,isProfileCompleted);
     }
 
     public  Set<String> getRoles() {
@@ -40,5 +42,8 @@ public class CurrentUserProvider {
 
     public String externalId(){
         return this.getCurrentUser().externalId();
+    }
+    public  Boolean isProfileCompleted() {
+        return this.getCurrentUser().isProfileCompleted();
     }
 }

@@ -1,0 +1,76 @@
+:root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1c1f2a;
+    --muted: #5f6780;
+    --primary: #4f46e5;
+    --primary-soft: #eef0ff;
+    --border: #e8ebf4;
+}
+
+body {
+    margin: 0;
+    padding: 24px;
+    background: var(--bg);
+    font-family: "Inter", Arial, sans-serif;
+    color: var(--text);
+}
+
+.container {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 12px 28px rgba(24, 39, 75, 0.08);
+}
+
+.badge {
+    display: inline-block;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .08em;
+    padding: 6px 10px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+}
+
+h1 {
+    font-size: 22px;
+    margin: 0 0 12px;
+}
+
+p {
+    margin: 0 0 12px;
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.otp-box {
+    background: #f8f9ff;
+    border: 1px dashed #c9cdfd;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.otp-code {
+    display: inline-block;
+    font-size: 30px;
+    letter-spacing: 10px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.footer {
+    margin-top: 18px;
+    font-size: 12px;
+    color: #8890a8;
+}

@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.TrueFalseConverter;
+import org.stylehub.backend.e_commerce.brand.entity.Brand;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -25,6 +27,10 @@ public class User {
     @Column(name = "email",nullable = false, unique = true, length = 100)
     private String email;
 
+    @Column(name = "is_profile_completed",nullable = false)
+    private Boolean isProfileCompleted;
+
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -32,4 +38,5 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
 }

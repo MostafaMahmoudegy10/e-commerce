@@ -42,7 +42,7 @@ public class SecurityConfiguration {
                 ).exceptionHandling(ex->
                         ex.authenticationEntryPoint(authenticationEntryPoint)
                                 .accessDeniedHandler(accessDeniedHandler))
-                .addFilterAfter(localUserSyncFilter, BearerTokenAuthenticationFilter.class)
+//                .addFilterAfter(localUserSyncFilter, BearerTokenAuthenticationFilter.class)
                 .build();
     }
 }

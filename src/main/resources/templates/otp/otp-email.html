@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your OTP Code</title>
+    <style>{{EMAIL_CSS}}</style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <span class="badge">STYLEHUB SECURITY</span>
+        <h1>Your verification code</h1>
+        <p>Hi {{RECIPIENT}}, use the code below to continue your request.</p>
+
+        <div class="otp-box">
+            <span class="otp-code">{{OTP_CODE}}</span>
+        </div>
+
+        <p>This code expires in <strong>{{EXPIRY_MINUTES}} minutes</strong>.</p>
+        <p>If you did not request this code, please ignore this message.</p>
+
+        <p class="footer">This is an automated message from StyleHub. Please do not reply.</p>
+    </div>
+</div>
+</body>
+</html>

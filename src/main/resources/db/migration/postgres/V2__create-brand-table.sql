@@ -7,6 +7,7 @@ create table brand(
    description text not null ,
    user_id UUID unique ,
    brand_image_url text,
+   public_id text,
    constraint FK_user_own_brand foreign key(user_id)
                   references users(id)
 );

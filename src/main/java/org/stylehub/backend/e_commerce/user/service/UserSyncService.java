@@ -24,9 +24,16 @@ public class UserSyncService {
                                     User newUser = new User();
                                     newUser.setExternalUserId(externalUserId);
                                     newUser.setEmail(email);
+                                    newUser.setIsProfileCompleted(true);
                                     this.userRepository.save(newUser);
 
                                 }
                   );
+    }
+
+    public boolean checkIsCompleted(String email) {
+        return userRepository.findByEmail(email)
+                .map(User::getIsProfileCompleted)
+                .orElse(false);
     }
 }

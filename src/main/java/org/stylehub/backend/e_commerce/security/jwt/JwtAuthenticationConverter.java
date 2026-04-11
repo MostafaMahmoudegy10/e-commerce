@@ -45,7 +45,7 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
             return "CUSTOMER";
         }
 
-        if ("BRAND".equals(upper) || "VENDOR".equals(upper) || "BRAND_OWNER".equals(upper)) {
+        if ("BRAND".equals(upper)  || "BRAND_OWNER".equals(upper)) {
             return "BRAND_OWNER";
         }
 

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.stylehub.backend.e_commerce.user.entity.User;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +28,15 @@ public class Brand {
     @Column(columnDefinition = "text",nullable = false)
     private String description;
 
+    @Column(name = "brand_image_url",nullable = false)
+    private String brandImageUrl;
 
+    @Column(name = "public_id",nullable = false)
+    private  String publicId;
+
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
 
 }

@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.stylehub.backend.e_commerce.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.user.service.UserSyncService;
 
 import java.io.IOException;
@@ -20,6 +21,8 @@ public class LocalUserSyncFilter extends OncePerRequestFilter {
 
     private final UserSyncService userSyncService;
 
+    private final CurrentUserProvider  currentUserProvider;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -28,7 +31,9 @@ public class LocalUserSyncFilter extends OncePerRequestFilter {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if(authentication !=null && authentication.getPrincipal() instanceof Jwt jwt){
-            this.userSyncService.upsert(jwt.getSubject(),jwt.getClaimAsString("email"));
+            if(!currentUserProvider.isProfileCompleted()) {
+                this.userSyncService.upsert(jwt.getSubject(), jwt.getClaimAsString("email"));
+            }
         }
 
         filterChain.doFilter(request, response);

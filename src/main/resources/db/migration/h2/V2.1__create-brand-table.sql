@@ -4,7 +4,8 @@ create table brand(
       brand_email varchar(255),
       description varchar(255) not null,
       user_id uuid,
-      brand_image_url varchar(255),
+      brand_image_url text,
+      public_id text,
       constraint FK_user_own_brand foreign key(user_id)
           references users(id)
 );
