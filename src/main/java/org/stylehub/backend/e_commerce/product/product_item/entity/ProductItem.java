@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.stylehub.backend.e_commerce.image.entity.ProductItemImage;
+import org.stylehub.backend.e_commerce.platform.media.entity.ProductItemImage;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.product.product_item.size.Size;
 
