@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.stylehub.backend.e_commerce.security.current_user.CurrentUserProvider;
-import org.stylehub.backend.e_commerce.security.current_user.dto.AuthenticatedUser;
+import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
+import org.stylehub.backend.e_commerce.platform.security.current_user.dto.AuthenticatedUser;
 import org.stylehub.backend.e_commerce.user.service.UserSyncService;
 
 import java.util.Map;
