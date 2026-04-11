@@ -30,21 +30,14 @@ public class BrandOwnerCategoryController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping()
-    public ResponseEntity<Map<String, Object>> getAllCategories
-            (@PageableDefault(page = 0, size = 10) Pageable pageable) {
-        return ResponseEntity.ok(this.categoryService.findAllBrandCategories(pageable));
+    @DeleteMapping("{categoryId}")
+    public ResponseEntity<String> deleteCategory(@PathVariable UUID categoryId) {
+        this.categoryService.deleteCategoryOfBrand(categoryId);
+        return ResponseEntity.ok("Category deleted");
     }
 
-    @DeleteMapping("/{categoryId}")
-    public ResponseEntity<Void> deleteBrandCategory(@PathVariable UUID categoryId) {
-        this.categoryService.deleteBrandCategoryById(categoryId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PatchMapping("/{categoryId}")
-    public ResponseEntity<CategoryResponse> patchCategory(@PathVariable UUID categoryId,
-                                                          @ModelAttribute CategoryPatchRequest request) {
-        return ResponseEntity.ok(categoryService.patchBrandCategory(categoryId, request));
+    @PatchMapping("{categoryId}")
+    public ResponseEntity<CategoryResponse> updateCategory(@PathVariable("categoryId") UUID CategoryId, @ModelAttribute CategoryPatchRequest patchRequest) {
+        return ResponseEntity.ok(this.categoryService.patchBrandCategory(CategoryId, patchRequest));
     }
 }

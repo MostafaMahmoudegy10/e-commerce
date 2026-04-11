@@ -5,9 +5,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.UUID;
 
 public record CategoryCreateRequest(
-        String categoryName,
+        String categoryNameEn,
+        String categoryNameAr,
+        String categoryDescriptionEn,
+        String categoryDescriptionAr,
         Character categoryGender,
-        String categoryDescription,
         MultipartFile categoryIcon,
         UUID  parentCategoryId
 ) {

@@ -9,16 +9,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.repository.BrandRepository;
-import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryCreateRequest;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryPatchRequest;
+import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
+import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
+import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryCreateRequest;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryResponse;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.FindAllCategoryResponse;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
-import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
-import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
-import org.stylehub.backend.e_commerce.user.entity.User;
 import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 import org.stylehub.backend.e_commerce.user.repository.UserRepository;
 
@@ -30,179 +29,171 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CategoryService {
 
-    private final CategoryRepository categoryRepository;
-    private final ImageService imageService;
-    private final BrandRepository brandRepository;
-    private final UserRepository userRepository;
-    private final CurrentUserProvider currentUserProvider;
+    private CategoryRepository categoryRepository;
+    private BrandRepository brandRepository;
+    private CurrentUserProvider currentUserProvider;
+    private ImageService imageService;
+    private UserRepository userRepository;
 
     private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
 
 
     @Transactional
     public CategoryResponse addNewCategory(CategoryCreateRequest request) {
-        validateBaseRequest(request.categoryName(), request.categoryIcon());
+        validateCategoryCreateRequest(request);
 
-        Brand ownerBrand = null;
-        try {
-            ownerBrand = getCurrentOwnerBrand();
-        } catch (Exception ignored) {
-            // fallback for tests/public category management
+        Brand ownerBrand= this.getCurrentBrand();
+
+        // check if the category requested is present or not
+        if(ownerBrand!=null){
+           boolean exists = this.categoryRepository
+                .existsByCategoryNameEnAndBrand_Id(request.categoryNameEn(),ownerBrand.getId());
+           if(!exists){
+               throw new IllegalArgumentException("categoryName for your brand "+ownerBrand.getBrandName()+"already exists");
+           }
+        }
+        Category parentCategory=null;
+        if(request.parentCategoryId()!=null){
+            parentCategory =
+                    this.categoryRepository.findByIdAndBrand_Id(request.parentCategoryId(),
+                            ownerBrand.getId())
+                            .orElseThrow(()-> new IllegalArgumentException("Category You Requested Not Present " +
+                                    "For Your Brand Please Add It First And Try Again "));
         }
 
-        boolean exists = ownerBrand != null
-                ? categoryRepository.existsByCategoryNameIgnoreCaseAndBrand_Id(request.categoryName(), ownerBrand.getId())
-                : categoryRepository.existsByCategoryNameIgnoreCase(request.categoryName());
-        if (exists) {
-            throw new IllegalArgumentException("categoryName already exists");
-        }
-
-        Category parent = null;
-        if (request.parentCategoryId() != null) {
-            parent = this.categoryRepository.findById(request.parentCategoryId())
-                    .orElseThrow(() -> new IllegalArgumentException("Parent category not found"));
-        }
-
-        UploadResponse image = uploadCategoryImage(request.categoryIcon());
+        UploadResponse image = this.imageService.uploadImage(request.categoryIcon());
 
         Category category = new Category();
-        category.setCategoryName(request.categoryName());
+        category.setBrand(ownerBrand);
+        category.setCategoryNameEn(request.categoryNameEn());
+        category.setCategoryNameAr(request.categoryNameAr());
+        category.setCategoryDescriptionAr(request.categoryDescriptionAr());
+        category.setCategoryDescriptionEn(request.categoryDescriptionEn());
+        category.setParentCategory(parentCategory);
         category.setCategoryGender(Gender.fromCode(request.categoryGender()));
-        category.setCategoryDescription(request.categoryDescription());
         category.setImageUrl(image.imageUrl());
         category.setPublicId(image.publicId());
-        category.setParentCategory(parent);
-        category.setBrand(ownerBrand);
 
-        Category savedCategory = this.categoryRepository.save(category);
+        Category savedCategory=this.categoryRepository.save(category);
+
         return toResponse(savedCategory);
     }
 
-    public Map<String, Object> findAllBrandCategories(Pageable pageable) {
-        Brand ownerBrand = getCurrentOwnerBrand();
-        Page<FindAllCategoryResponse> categoryPage = this.categoryRepository
-                .findAllPageableCategoryByBrandId(ownerBrand.getId(), pageable);
-        return mapPaginatedResponse(categoryPage);
-    }
-
-    @Deprecated
-    public Map<String, Object> findAllCategories(Pageable pageable) {
-        Page<FindAllCategoryResponse> categoryPage = this.categoryRepository.findAllPageableCategory(pageable);
-        return mapPaginatedResponse(categoryPage);
-    }
-
-    public Map<String, Object> findAllEcommerceCategories(Pageable pageable) {
-        Page<FindAllCategoryResponse> categoryPage = this.categoryRepository.findAllGlobalCategories(pageable);
+    public Map<String,Object> findAllBrandCategories(Pageable pageable, UUID brandId){
+        // first get owner brand id
+        Page<Map<String,Object>> categoryPage
+                =this.categoryRepository.findAllByBrand_Id(brandId,pageable);
         return mapPaginatedResponse(categoryPage);
     }
 
     @Transactional
-    public CategoryResponse patchBrandCategory(UUID categoryId, CategoryPatchRequest request) {
-        Brand ownerBrand = getCurrentOwnerBrand();
+    public void deleteCategoryOfBrand(UUID categoryId){
+       Brand brand= this.getCurrentBrand();
+       Category category=
+               this.categoryRepository.findByIdAndBrand_Id(categoryId,brand.getId())
+               .orElseThrow(()->new IllegalArgumentException("Category You Requested Not Present " +
+                               "For Your Brand Please Add It First And Try Again "));
+       safelyDeleteCategoryIcon(category.getPublicId());
+       this.categoryRepository.deleteById(categoryId);
+    }
 
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+    @Transactional
+    public CategoryResponse patchBrandCategory(UUID categoryId, CategoryPatchRequest patchRequest){
+        // first we need to get the  brand owner
+        Brand brand= this.getCurrentBrand();
+        // make sure this category is present for this brand
 
-        if (category.getBrand() == null || !category.getBrand().getId().equals(ownerBrand.getId())) {
-            throw new IllegalArgumentException("You can only edit your own categories");
-        }
+        Category category= this.categoryRepository.findByIdAndBrand_Id(categoryId,brand.getId())
+                .orElseThrow(()->new IllegalArgumentException("Category You Requested Not Present " +
+                        "For Your Brand Please Add It First And Try Again "));
 
-        if (request.categoryName() != null && !request.categoryName().isBlank()) {
-            category.setCategoryName(request.categoryName());
-        }
-        if (request.categoryGender() != null) {
-            category.setCategoryGender(Gender.fromCode(request.categoryGender()));
-        }
-        if (request.categoryDescription() != null && !request.categoryDescription().isBlank()) {
-            category.setCategoryDescription(request.categoryDescription());
-        }
-        if (request.parentCategoryId() != null) {
-            Category parent = categoryRepository.findById(request.parentCategoryId())
+        Category pathchedCategory=patchCategoryProcess(category,patchRequest);
+
+        if (patchRequest.parentCategoryId() != null) {
+            Category parent = categoryRepository.findById(patchRequest.parentCategoryId())
                     .orElseThrow(() -> new IllegalArgumentException("Parent category not found"));
-            category.setParentCategory(parent);
+            pathchedCategory.setParentCategory(parent);
         }
-
-        if (request.categoryIcon() != null && !request.categoryIcon().isEmpty()) {
-            safelyDeleteImage(category.getPublicId());
-            UploadResponse uploadResponse = uploadCategoryImage(request.categoryIcon());
-            category.setImageUrl(uploadResponse.imageUrl());
-            category.setPublicId(uploadResponse.publicId());
+        if(patchRequest.imageIcon()!=null){
+            safelyDeleteCategoryIcon(pathchedCategory.getPublicId());
+            UploadResponse image = this.imageService.uploadImage(patchRequest.imageIcon());
+            pathchedCategory.setImageUrl(image.imageUrl());
+            pathchedCategory.setPublicId(image.publicId());
         }
-
-        Category saved = categoryRepository.save(category);
-        return toResponse(saved);
+       return toResponse(this.categoryRepository.saveAndFlush(pathchedCategory));
     }
 
-    @Transactional
-    public void deleteBrandCategoryById(UUID categoryId) {
-        Brand ownerBrand = getCurrentOwnerBrand();
-
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
-
-        if (category.getBrand() == null || !category.getBrand().getId().equals(ownerBrand.getId())) {
-            throw new IllegalArgumentException("You can only delete your own categories");
+    private Category patchCategoryProcess(Category category, CategoryPatchRequest patchRequest) {
+        if(patchRequest.categoryNameEn()!=null&&!patchRequest.categoryNameEn().isBlank()){
+            category.setCategoryNameEn(patchRequest.categoryNameEn());
         }
-
-        safelyDeleteImage(category.getPublicId());
-        this.categoryRepository.delete(category);
+        if(patchRequest.categoryNameAr()!=null&&!patchRequest.categoryNameAr().isBlank()){
+            category.setCategoryNameEn(patchRequest.categoryNameAr());
+        }
+        if(patchRequest.categoryDescriptionEn()!=null&&!patchRequest.categoryDescriptionEn().isBlank()){
+            category.setCategoryNameEn(patchRequest.categoryNameEn());
+        }
+        if(patchRequest.categoryDescriptionAr()!=null&&!patchRequest.categoryDescriptionAr().isBlank()){
+            category.setCategoryNameEn(patchRequest.categoryDescriptionAr());
+        }
+        return category;
     }
 
-    private UploadResponse uploadCategoryImage(org.springframework.web.multipart.MultipartFile imageFile) {
-        try {
-            return this.imageService.uploadImage(imageFile);
-        } catch (IOException e) {
-            log.error("Failed to upload category icon", e);
-            throw new RuntimeException("Failed to upload category icon", e);
-        }
-    }
-
-    private void safelyDeleteImage(String publicId) {
+    private void safelyDeleteCategoryIcon(String publicId) {
         if (publicId == null || publicId.isBlank()) {
             return;
         }
-        try {
-            imageService.deleteImage(publicId);
-        } catch (IOException e) {
-            log.warn("Failed to delete old image with publicId={}", publicId, e);
+        this.imageService.deleteImage(publicId);
+    }
+
+    private CategoryResponse toResponse(Category savedCategory) {
+        return  new CategoryResponse(
+                savedCategory.getId(),
+                savedCategory.getCategoryNameEn(),
+                savedCategory.getCategoryDescriptionEn(),
+                savedCategory.getCategoryNameAr(),
+                savedCategory.getCategoryDescriptionAr(),
+                savedCategory.getImageUrl(),
+                savedCategory.getCategoryGender(),
+                savedCategory.getParentCategory().getId()
+                );
+    }
+
+    private void validateCategoryCreateRequest(CategoryCreateRequest request) {
+        if(request.categoryNameAr()==null){
+            throw new IllegalArgumentException("Please enter category name in AR");
+        }
+        if(request.categoryNameEn()==null){
+            throw new IllegalArgumentException("Please enter category name in EN");
+        }
+        if(request.categoryDescriptionEn()==null){
+            throw new IllegalArgumentException("please enter category description in EN");
+        }
+        if(request.categoryDescriptionAr()==null){
+            throw new IllegalArgumentException("please enter category description in AR");
+        }
+        if(request.categoryIcon()==null){
+            throw new IllegalArgumentException("please enter category icon ");
+        }
+        if(request.categoryGender()==null){
+            throw new IllegalArgumentException("please enter gender of category ");
         }
     }
 
-    private void validateBaseRequest(String categoryName, org.springframework.web.multipart.MultipartFile categoryIcon) {
-        if (categoryName == null || categoryName.isBlank()) {
-            throw new IllegalArgumentException("categoryName is null or empty");
-        }
-        if (categoryIcon == null || categoryIcon.isEmpty()) {
-            throw new IllegalArgumentException("please add an icon for your category");
-        }
-    }
-
-    private Brand getCurrentOwnerBrand() {
-        String externalId = currentUserProvider.externalId();
-        User user = userRepository.findByExternalUserId(externalId)
-                .orElseThrow(() -> new IllegalArgumentException("Current user not found"));
-
-        return brandRepository.findByUser_Id(user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("You need to setup your brand profile first"));
-    }
-
-    private Map<String, Object> mapPaginatedResponse(Page<FindAllCategoryResponse> categoryPage) {
+    private Map<String, Object> mapPaginatedResponse(Page<Map<String, Object>> categoryPage) {
         return Map.of(
-                "content", categoryPage.getContent(),
-                "totalElements", categoryPage.getTotalElements(),
-                "page", categoryPage.getNumber(),
-                "size", categoryPage.getSize(),
-                "totalPages", categoryPage.getTotalPages()
+                "data", categoryPage.getContent(),
+                "totalElements",categoryPage.getTotalElements(),
+                "page",categoryPage.getNumber(),
+                "size",categoryPage.getSize(),
+                "totalPages",categoryPage.getTotalPages()
         );
     }
 
-    private CategoryResponse toResponse(Category category) {
-        UUID parentId = category.getParentCategory() != null ?
-                category.getParentCategory().getId() : null;
-        return new CategoryResponse(
-                category.getId(),
-                category.getCategoryName(),
-                category.getCategoryGender(),
-                parentId);
+    private Brand getCurrentBrand() {
+        UUID brandId=currentUserProvider.getBrandId();
+        return this.brandRepository.findById(brandId)
+                .orElseThrow(()->new IllegalArgumentException("You need to setup your brand profile first"));
     }
+
 }

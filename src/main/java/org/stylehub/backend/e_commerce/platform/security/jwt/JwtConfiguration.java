@@ -27,14 +27,14 @@ public class JwtConfiguration {
                 "HmacSHA256");
 
         // build the key with this secret
-        NimbusJwtDecoder decoder= NimbusJwtDecoder.withSecretKey(secretKeySpec).build();
+         NimbusJwtDecoder decoder= NimbusJwtDecoder.withSecretKey(secretKeySpec).build();
 
-//        OAuth2TokenValidator<Jwt> withIssuer= JwtValidators.createDefaultWithIssuer(appJwtProperties.issuer());
+        OAuth2TokenValidator<Jwt> withIssuer= JwtValidators.createDefaultWithIssuer(appJwtProperties.issuer());
 //
-//        OAuth2TokenValidator<Jwt> audienceValidator=new AudienceValidator(appJwtProperties.audience());
+        OAuth2TokenValidator<Jwt> audienceValidator=new AudienceValidator(appJwtProperties.audience());
 
         // collect all validators
-        decoder.setJwtValidator(JwtValidators.createDefault());
+        decoder.setJwtValidator(new  DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator));
 
         return decoder;
     }

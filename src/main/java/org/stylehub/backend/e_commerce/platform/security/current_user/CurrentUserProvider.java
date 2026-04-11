@@ -1,5 +1,6 @@
 package org.stylehub.backend.e_commerce.platform.security.current_user;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.stylehub.backend.e_commerce.platform.security.current_user.dto.AuthenticatedUser;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -35,11 +37,9 @@ public class CurrentUserProvider {
     public  Set<String> getRoles() {
         return this.getCurrentUser().roles();
     }
-
     public String getEmail(){
         return this.getCurrentUser().email();
     }
-
     public String externalId(){
         return this.getCurrentUser().externalId();
     }

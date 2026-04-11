@@ -9,6 +9,7 @@ import org.stylehub.backend.e_commerce.user.repository.UserRepository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class DashboardTokenService {
     private final BrandRepository brandRepository;
 
     public TokenPair generateTokenPair(User user){
-        String role = (Boolean.parseBoolean(brandRepository.existsByUser_Id(user.getId())) ? "BRAND_OWNER":"CUSTOMER");
+        String role = (brandRepository.existsByUser_Id(user.getId()) ? "BRAND_OWNER":"CUSTOMER");
 
         return new TokenPair(
                 createToken(user,role,"access",ACCESS_TOKEN_SECONDS),
@@ -46,6 +47,7 @@ public class DashboardTokenService {
         String subject =jwt.getClaimAsString("subject");
         String email =jwt.getClaimAsString("email");
         String role =jwt.getClaimAsString("role");
+
         return new TokenPair(
                 createToken(subject,email,role,"access",ACCESS_TOKEN_SECONDS),
                 createToken(subject,email,role,"refresh",REFRESH_TOKEN_SECONDS)

@@ -6,7 +6,12 @@ import java.util.UUID;
 
 public record CategoryResponse(
          UUID id,
-         String categoryName,
+         String categoryNameEn,
+         String categoryDescriptionEn,
+         String categoryNameAr,
+         String categoryDescriptionAr,
+         String imageUrl,
          Gender categoryGender,
-         UUID parentCategoryId) {
+         UUID parentCategoryId
+) {
 }

@@ -20,17 +20,18 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "category_name", nullable = false)
-    private String categoryName;
-
-    @Column(name = "category_name_ar")
-    private String categoryNameAr;
-
-    @Column(name = "category_name_en")
+    @Column(name = "category_name_en", nullable = false)
     private String categoryNameEn;
 
+    @Column(name = "category_name_ar", nullable = false)
+    private String categoryNameAr;
+
     @Column(columnDefinition = "text", nullable = false)
-    private String categoryDescription;
+    private String categoryDescriptionEn;
+
+
+    @Column(columnDefinition = "text", nullable = false)
+    private String categoryDescriptionAr;
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
@@ -48,7 +49,7 @@ public class Category {
     @OneToMany(mappedBy = "parentCategory")
     private List<Category> subCategory;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
     private Brand brand;
 }

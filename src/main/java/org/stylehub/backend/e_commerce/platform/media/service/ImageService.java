@@ -16,25 +16,34 @@ public class ImageService {
 
     private final Cloudinary cloudinary;
 
-    public UploadResponse uploadImage(MultipartFile file) throws IOException {
-      Map uploadResults= cloudinary.uploader().upload(
-                file.getBytes(),
-                ObjectUtils.asMap(
-                        "folder","e-commerce/products"
-                )
-        );
-        UploadResponse uploadResponse=
-                new UploadResponse(
-                        uploadResults.get("secure_url").toString(),
-                        uploadResults.get("public_id").toString()
-                );
-        return uploadResponse;
+    public UploadResponse uploadImage(MultipartFile file) {
+     try {
+         Map uploadResults = cloudinary.uploader().upload(
+                 file.getBytes(),
+                 ObjectUtils.asMap(
+                         "folder", "e-commerce/products"
+                 )
+         );
+         UploadResponse uploadResponse =
+                 new UploadResponse(
+                         uploadResults.get("secure_url").toString(),
+                         uploadResults.get("public_id").toString()
+                 );
+         return uploadResponse;
+     }catch (IOException e) {
+         throw new IllegalArgumentException("the file could not be uploaded"+e.getMessage());
+     }
     }
 
-    public void deleteImage(String publicId) throws IOException {
-        Map result = cloudinary.uploader().destroy(
-                "ecommerce/products/"+publicId,
-                ObjectUtils.asMap("invalidate", true)
-        );
+    public void deleteImage(String publicId)  {
+      try {
+          Map result = cloudinary.uploader().destroy(
+                  "ecommerce/products/" + publicId,
+                  ObjectUtils.asMap("invalidate", true)
+          );
+      }catch (IOException e) {
+          throw new IllegalArgumentException("the file is not presented "+e.getMessage());
+
+      }
     }
 }
