@@ -17,22 +17,19 @@ import java.util.Map;
 public class BrandService {
 
     private final BrandRepository brandRepository;
-
     private final UserSyncService userSyncService;
-
     private final CurrentUserProvider currentUserProvider;
 
     @Transactional
-    public Map<String,Object> setupBrand(BrandCreationRequest brandCreationRequest) {
-       //first we validate the dto request
+    public Map<String, Object> setupBrand(BrandCreationRequest brandCreationRequest) {
         validateBrandCreationRequest(brandCreationRequest);
 
         brandRepository.findByUser_ExternalUserId(currentUserProvider.externalId())
-            .orElseThrow(() -> new RuntimeException("User Already Auhtenticated And Registred"));
+                .ifPresent(brand -> {
+                    throw new IllegalArgumentException("Brand profile already exists for this user.");
+                });
 
-        // first we create the user for the brand
-       User user= userSyncService.upsert(currentUserProvider);
-
+        User user = userSyncService.upsert(currentUserProvider);
 
         Brand brand = new Brand();
         brand.setBrandName(brandCreationRequest.brandName());
@@ -41,28 +38,26 @@ public class BrandService {
         brand.setDescription(brandCreationRequest.bio());
         brand.setUser(user);
 
-        Brand savedBrand= brandRepository.save(brand);
+        Brand savedBrand = brandRepository.save(brand);
 
         return Map.of(
-                "message","brand added successfully with "+savedBrand.getBrandEmail()
+                "message", "Brand profile created successfully.",
+                "brandEmail", savedBrand.getBrandEmail()
         );
     }
 
     private void validateBrandCreationRequest(BrandCreationRequest brandCreationRequest) {
-        if(brandCreationRequest.brandName()==null){
-            throw  new IllegalArgumentException("Please Enter BrandName");
-
+        if (brandCreationRequest.brandName() == null) {
+            throw new IllegalArgumentException("Brand name is required.");
         }
-        if(brandCreationRequest.phoneNumber()==null){
-            throw  new IllegalArgumentException("Please Enter phoneNumber");
-
+        if (brandCreationRequest.phoneNumber() == null) {
+            throw new IllegalArgumentException("Phone number is required.");
         }
-        if(brandCreationRequest.bio()==null){
-            throw  new IllegalArgumentException("Please Enter bio");
+        if (brandCreationRequest.bio() == null) {
+            throw new IllegalArgumentException("Bio is required.");
         }
-
-        if(brandCreationRequest.profileImageUrl()==null){
-            throw  new IllegalArgumentException("Please Enter imageUrl");
+        if (brandCreationRequest.profileImageUrl() == null) {
+            throw new IllegalArgumentException("Profile image URL is required.");
         }
     }
 }
