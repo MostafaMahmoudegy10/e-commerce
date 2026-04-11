@@ -3,24 +3,31 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Your OTP Code</title>
     <style>{{EMAIL_CSS}}</style>
 </head>
 <body>
-<div class="container">
+<div class="email-wrapper">
     <div class="card">
-        <span class="badge">STYLEHUB SECURITY</span>
-        <h1>Your verification code</h1>
-        <p>Hi {{RECIPIENT}}, use the code below to continue your request.</p>
-
-        <div class="otp-box">
-            <span class="otp-code">{{OTP_CODE}}</span>
+        <div class="hero">
+            <span class="badge">STYLEHUB SECURITY</span>
+            <h1>Verify your sign in</h1>
+            <p class="hero-text">Hi {{RECIPIENT}}, use this one-time password to complete your login.</p>
         </div>
 
-        <p>This code expires in <strong>{{EXPIRY_MINUTES}} minutes</strong>.</p>
-        <p>If you did not request this code, please ignore this message.</p>
+        <div class="otp-panel">
+            <p class="otp-label">One-time password</p>
+            <p class="otp-code">{{OTP_CODE}}</p>
+            <p class="otp-expiry">Valid for {{EXPIRY_MINUTES}} minutes</p>
+        </div>
 
-        <p class="footer">This is an automated message from StyleHub. Please do not reply.</p>
+        <p class="message">For your security, never share this code with anyone. StyleHub support will never ask for it.</p>
+
+        <div class="divider"></div>
+
+        <p class="footer">If you didn’t request this code, you can safely ignore this email.</p>
+        <p class="footer muted">This is an automated security email from StyleHub.</p>
     </div>
 </div>
 </body>
