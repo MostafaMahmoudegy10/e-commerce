@@ -9,8 +9,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface BrandRepository extends JpaRepository<Brand, UUID> {
-
-
     @Query("""
         select  b from Brand  b
                 inner join User  u
@@ -18,4 +16,12 @@ public interface BrandRepository extends JpaRepository<Brand, UUID> {
         where u.externalUserId=:externalId                                   
         """)
     Optional<Brand> findByUser_ExternalUserId(String externalId);
+
+    @Query("""
+             select (count(b)>0)
+                         from Brand  b
+                         where  b.user.externalUserId=:externalId                        
+            """)
+   boolean existsByUser_ExternalUserId(String externalId);
+
 }

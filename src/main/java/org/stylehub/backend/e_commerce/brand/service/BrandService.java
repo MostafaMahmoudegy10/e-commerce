@@ -24,12 +24,12 @@ public class BrandService {
     public Map<String, Object> setupBrand(BrandCreationRequest brandCreationRequest) {
         validateBrandCreationRequest(brandCreationRequest);
 
+        User user = userSyncService.create(currentUserProvider);
+
         brandRepository.findByUser_ExternalUserId(currentUserProvider.externalId())
                 .ifPresent(brand -> {
                     throw new IllegalArgumentException("Brand profile already exists for this user.");
                 });
-
-        User user = userSyncService.upsert(currentUserProvider);
 
         Brand brand = new Brand();
         brand.setBrandName(brandCreationRequest.brandName());
@@ -59,5 +59,15 @@ public class BrandService {
         if (brandCreationRequest.profileImageUrl() == null) {
             throw new IllegalArgumentException("Profile image URL is required.");
         }
+    }
+
+    public boolean isBrandExists(String globalBrandId){
+
+        if (!this.brandRepository.existsByUser_ExternalUserId(globalBrandId)) {
+            throw new IllegalArgumentException(
+                    "Brand id not found, please complete your profile in the application"
+            );
+        }
+        return true;
     }
 }

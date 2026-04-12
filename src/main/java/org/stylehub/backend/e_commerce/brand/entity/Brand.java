@@ -31,8 +31,7 @@ public class Brand {
     @Column(name = "brand_image_url",nullable = false)
     private String brandImageUrl;
 
-
-    @OneToOne
+    @OneToOne(fetch =  FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 

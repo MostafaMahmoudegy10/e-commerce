@@ -52,7 +52,7 @@ public class CategoryService {
         Category parentCategory=null;
         if(request.parentCategoryId()!=null){
             parentCategory =
-                    this.categoryRepository.findByIdAndBrand_User_ExternalUserId(request.parentCategoryId(),
+                    this.categoryRepository.findCategoryByIdAndBrand_User_ExternalUserId(request.parentCategoryId(),
                             externalId)
                             .orElseThrow(()-> new IllegalArgumentException("Category You Requested Not Present " +
                                     "For Your Brand Please Add It First And Try Again "));
@@ -90,7 +90,7 @@ public class CategoryService {
     public void deleteCategoryOfBrand(UUID categoryId){
        String externalUserId= this.getCurrentBrand();
        Category category=
-               this.categoryRepository.findByIdAndBrand_User_ExternalUserId(categoryId,externalUserId)
+               this.categoryRepository.findCategoryByIdAndBrand_User_ExternalUserId(categoryId,externalUserId)
                .orElseThrow(()->new IllegalArgumentException("Category You Requested Not Present " +
                                "For Your Brand Please Add It First And Try Again "));
        safelyDeleteCategoryIcon(category.getPublicId());
@@ -103,7 +103,7 @@ public class CategoryService {
         String externalId= this.getCurrentBrand();
         // make sure this category is present for this brand
 
-        Category category= this.categoryRepository.findByIdAndBrand_User_ExternalUserId(categoryId,externalId)
+        Category category= this.categoryRepository.findCategoryByIdAndBrand_User_ExternalUserId(categoryId,externalId)
                 .orElseThrow(()->new IllegalArgumentException("Category You Requested Not Present " +
                         "For Your Brand Please Add It First And Try Again "));
 

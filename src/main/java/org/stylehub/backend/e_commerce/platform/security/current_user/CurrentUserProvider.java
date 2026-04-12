@@ -21,6 +21,7 @@ public class CurrentUserProvider {
 
     public AuthenticatedUser getCurrentUser() {
         String externalId = externalId();
+
         User user = userRepository.findByExternalUserId(externalId)
                 .orElseThrow(() -> new IllegalStateException("User not found with external id: " + externalId));
 

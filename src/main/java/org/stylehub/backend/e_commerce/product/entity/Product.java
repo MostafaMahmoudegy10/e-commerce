@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.stylehub.backend.e_commerce.brand.entity.Brand;
+import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.product.product_item.entity.ProductItem;
 
 import java.math.BigDecimal;
@@ -41,6 +43,14 @@ public class Product {
 
     @Column(name = "public_id",nullable = false)
     private String publicId;
+
+    @ManyToOne
+    @JoinColumn(name = "brand_id",nullable = false)
+    private Brand brand;
+
+    @OneToOne
+    @JoinColumn(name = "category_id",nullable = false)
+    private Category category;
 
     @OneToMany(mappedBy = "product",
             cascade = {CascadeType.PERSIST, CascadeType.MERGE,CascadeType.REMOVE})

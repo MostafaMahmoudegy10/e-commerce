@@ -25,11 +25,11 @@ public class CustomerProfileService {
     public Map<String, Object> setupProfile(CustomerProfileSetupRequest request) {
         validateRequest(request);
 
+        User user = userSyncService.create(currentUserProvider);
+
         if (customerProfileRepository.existsByUsernameAndUser_ExternalUserIdNot(request.username(), currentUserProvider.externalId())) {
             throw new IllegalArgumentException("Username is already taken.");
         }
-
-        User user = userSyncService.upsert(currentUserProvider);
 
         CustomerProfile profile = customerProfileRepository
                 .findByUser_ExternalUserId(currentUserProvider.externalId())

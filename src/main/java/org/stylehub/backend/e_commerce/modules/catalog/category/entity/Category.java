@@ -49,7 +49,7 @@ public class Category {
     @OneToMany(mappedBy = "parentCategory")
     private List<Category> subCategory;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")
     private Brand brand;
 }

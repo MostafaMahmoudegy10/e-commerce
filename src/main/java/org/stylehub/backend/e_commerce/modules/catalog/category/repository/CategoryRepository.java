@@ -38,6 +38,6 @@ public interface CategoryRepository extends JpaRepository<Category,UUID> {
            select c from Category c 
                       where c.id=:categoryId and c.brand.user.externalUserId=:externalUserId
                       """)
-    Optional<Category> findByIdAndBrand_User_ExternalUserId(@Param("categoryId") UUID categoryId,
+    Optional<Category> findCategoryByIdAndBrand_User_ExternalUserId(@Param("categoryId") UUID categoryId,
                                         @Param("externalUserId")   String externalId);
 }

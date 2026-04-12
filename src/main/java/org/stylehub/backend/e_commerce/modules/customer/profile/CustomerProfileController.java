@@ -22,7 +22,6 @@ public class CustomerProfileController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Map<String, Object>> setupProfile(@ModelAttribute
                                                                 CustomerProfileSetupRequest request) {
-        System.out.println("this customer ++ "+currentUserProvider.getCurrentUser());
         return ResponseEntity.ok(customerProfileService.setupProfile(request));
     }
 

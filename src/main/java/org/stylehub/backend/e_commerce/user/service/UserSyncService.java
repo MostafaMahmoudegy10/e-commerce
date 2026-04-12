@@ -15,26 +15,21 @@ public class UserSyncService {
     private final UserRepository userRepository;
 
     @Transactional
-    public User upsert(CurrentUserProvider currentUserProvider) {
-        return this.userRepository
-                .findByExternalUserId(currentUserProvider.externalId())
-                .map(user -> {
-                    if (currentUserProvider.getEmail() != null &&
-                            !currentUserProvider.getEmail().equals(user.getEmail())) {
-                        user.setEmail(currentUserProvider.getEmail());
-                    }
-                    return user;
-                })
-                .orElseGet(() -> {
-                    User newUser = new User();
-                    newUser.setExternalUserId(currentUserProvider.externalId());
-                    newUser.setEmail(currentUserProvider.getEmail());
-                    newUser.setRole(Role.valueOf(
-                            currentUserProvider.getRoles().stream().findFirst().orElse("CUSTOMER")
-                    ));
-                    newUser.setIsProfileCompleted(true);
-                    return this.userRepository.save(newUser);
-                });
+    public User create(CurrentUserProvider currentUserProvider) {
+
+        if (this.userRepository.existsByExternalUserId(currentUserProvider.externalId())) {
+            throw new IllegalArgumentException("User already exists");
+        }
+
+        User newUser = new User();
+        newUser.setExternalUserId(currentUserProvider.externalId());
+        newUser.setEmail(currentUserProvider.getEmail());
+        newUser.setRole(Role.valueOf(
+                currentUserProvider.getRoles().stream().findFirst().orElse("CUSTOMER")
+        ));
+        newUser.setIsProfileCompleted(true);
+
+        return this.userRepository.save(newUser);
     }
 
 }
