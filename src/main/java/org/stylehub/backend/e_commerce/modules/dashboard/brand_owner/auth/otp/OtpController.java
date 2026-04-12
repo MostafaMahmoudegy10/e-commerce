@@ -9,7 +9,6 @@ import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.se
 @RestController
 @RequestMapping("api/v1/public/otp")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('BRAND_OWNER')")
 public class OtpController {
 
     private final OtpService otpService;
