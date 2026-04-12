@@ -62,8 +62,8 @@ public class ProductService {
        product.setPrice(request.productPrice());
        product.setCategory(category);
        product.setBrand(category.getBrand());
-
-       return toResponse(product);
+       Product savedProduct= this.productRepository.save(product);
+       return toResponse(savedProduct);
 
    }
 

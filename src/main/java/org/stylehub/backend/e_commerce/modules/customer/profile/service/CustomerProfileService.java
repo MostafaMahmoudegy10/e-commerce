@@ -27,7 +27,7 @@ public class CustomerProfileService {
 
         User user = userSyncService.create(currentUserProvider);
 
-        if (customerProfileRepository.existsByUsernameAndUser_ExternalUserIdNot(request.username(), currentUserProvider.externalId())) {
+        if (customerProfileRepository.existsByUsernameAndUser_ExternalUserIdNot(request.userName(), currentUserProvider.externalId())) {
             throw new IllegalArgumentException("Username is already taken.");
         }
 
@@ -36,7 +36,7 @@ public class CustomerProfileService {
                 .orElseGet(CustomerProfile::new);
 
         profile.setUser(user);
-        profile.setUsername(request.username());
+        profile.setUsername(request.userName());
         profile.setFirstName(request.firstName());
         profile.setLastName(request.lastName());
         profile.setPhoneNumber(request.phoneNumber());
@@ -74,7 +74,7 @@ public class CustomerProfileService {
         );
     }
     private void validateRequest(CustomerProfileSetupRequest request) {
-        if (isBlank(request.username())) {
+        if (isBlank(request.userName())) {
             throw new IllegalArgumentException("Username is required.");
         }
         if (isBlank(request.firstName())) {
