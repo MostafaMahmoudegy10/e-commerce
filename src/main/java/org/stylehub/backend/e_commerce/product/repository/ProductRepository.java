@@ -18,4 +18,25 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
                       and u.externalUserId = :generalBrandId
                                                         """)
    boolean existsProductByBrand_User_ExternalUserId(String productName,String generalBrandId);
+
+    @Query("""
+                select p
+                from Product p
+                join p.brand b
+                join b.user u
+                where p.id = :productId
+                  and u.externalUserId = :generalBrandId
+            """)
+    Optional<Product> findProductByIdAndBrand_User_ExternalUserId(UUID productId, String generalBrandId);
+
+    @Query("""
+                select (count(p) > 0)
+                from Product p
+                join p.brand b
+                join b.user u
+                where p.productNameEn = :productName
+                  and u.externalUserId = :generalBrandId
+                  and p.id <> :productId
+            """)
+    boolean existsProductByBrand_User_ExternalUserIdAndIdNot(String productName, String generalBrandId, UUID productId);
 }
