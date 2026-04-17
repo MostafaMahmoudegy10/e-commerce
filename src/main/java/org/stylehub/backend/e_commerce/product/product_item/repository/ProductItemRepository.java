@@ -52,4 +52,6 @@ public interface ProductItemRepository extends JpaRepository<ProductItem, UUID> 
     Optional<ProductItem> findProductItemByIdAndProduct_Brand_User_ExternalUserId(UUID productItemId, String brandId);
 
     List<ProductItem> findAllByProduct_Id(UUID productId);
+
+    List<ProductItem> findAllByProduct_Brand_User_ExternalUserId(String externalUserId);
 }

@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.stylehub.backend.e_commerce.modules.customer.catalog.dto.ProductDetailsResponse;
+import org.stylehub.backend.e_commerce.modules.customer.catalog.dto.ProductRecommendationsResponse;
 import org.stylehub.backend.e_commerce.modules.customer.catalog.service.CustomerProductCatalogService;
 
 import java.math.BigDecimal;
@@ -49,5 +50,10 @@ public class CustomerProductCatalogController {
     @GetMapping("{productId}")
     public ResponseEntity<ProductDetailsResponse> findProductDetails(@PathVariable UUID productId) {
         return ResponseEntity.ok(this.customerProductCatalogService.findProductDetails(productId));
+    }
+
+    @GetMapping("discover")
+    public ResponseEntity<ProductRecommendationsResponse> discover() {
+        return ResponseEntity.ok(this.customerProductCatalogService.findRecommendations());
     }
 }

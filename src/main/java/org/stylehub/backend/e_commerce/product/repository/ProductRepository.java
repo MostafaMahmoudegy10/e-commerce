@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -46,7 +47,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @Query("""
             select p
             from Product p
-            where (:brandId is null or p.brand.id = :brandId)
+            where p.isActive = true
+              and p.isArchived = false
+              and (:brandId is null or p.brand.id = :brandId)
               and (:categoryId is null or p.category.id = :categoryId)
               and (:queryText is null
                    or lower(p.productNameEn) like lower(concat('%', :queryText, '%'))
@@ -68,4 +71,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             Double minRating,
             Pageable pageable
     );
+
+    List<Product> findTop20ByIsActiveTrueAndIsArchivedFalseOrderByIdDesc();
+
+    List<Product> findTop20ByCategory_IdAndIsActiveTrueAndIsArchivedFalseOrderByIdDesc(UUID categoryId);
 }

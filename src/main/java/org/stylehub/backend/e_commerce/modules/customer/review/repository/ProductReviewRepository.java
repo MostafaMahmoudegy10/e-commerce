@@ -44,4 +44,15 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, UU
             where b.id = :brandId
             """)
     long countByBrandId(UUID brandId);
+
+    @Query("""
+            select pr
+            from ProductReview pr
+            join pr.product p
+            join p.brand b
+            join b.user u
+            where u.externalUserId = :externalUserId
+            order by pr.createdAt desc
+            """)
+    List<ProductReview> findAllByBrandOwnerExternalUserId(String externalUserId);
 }

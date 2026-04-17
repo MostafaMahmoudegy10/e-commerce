@@ -119,8 +119,28 @@ public class ProductService {
     public void deleteBrandProduct(UUID productId) {
         String brandId = getCurrentBrand();
         Product product = findProductForBrand(productId, brandId);
-        safelyDeleteProductThumbnail(product.getPublicId());
-        this.productRepository.delete(product);
+        product.setIsArchived(true);
+        product.setIsActive(false);
+        this.productRepository.save(product);
+    }
+
+    @Transactional
+    public ProductCreationResponse toggleProductVisibility(UUID productId, boolean isActive) {
+        String brandId = getCurrentBrand();
+        Product product = findProductForBrand(productId, brandId);
+        product.setIsActive(isActive);
+        return toResponse(this.productRepository.save(product));
+    }
+
+    @Transactional
+    public ProductCreationResponse archiveProduct(UUID productId, boolean archived) {
+        String brandId = getCurrentBrand();
+        Product product = findProductForBrand(productId, brandId);
+        product.setIsArchived(archived);
+        if (archived) {
+            product.setIsActive(false);
+        }
+        return toResponse(this.productRepository.save(product));
     }
 
     private ProductCreationResponse toResponse(Product product) {

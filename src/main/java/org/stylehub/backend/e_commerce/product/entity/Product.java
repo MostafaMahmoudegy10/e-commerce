@@ -44,6 +44,12 @@ public class Product {
     @Column(name = "public_id",nullable = false)
     private String publicId;
 
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    @Column(name = "is_archived", nullable = false)
+    private Boolean isArchived = false;
+
     @ManyToOne
     @JoinColumn(name = "brand_id",nullable = false)
     private Brand brand;

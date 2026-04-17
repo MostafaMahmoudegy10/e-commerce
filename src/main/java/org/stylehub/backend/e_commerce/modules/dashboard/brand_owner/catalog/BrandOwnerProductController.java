@@ -43,6 +43,22 @@ public class BrandOwnerProductController {
         return ResponseEntity.ok("Product deleted");
     }
 
+    @PatchMapping("{productId}/visibility")
+    public ResponseEntity<ProductCreationResponse> toggleVisibility(
+            @PathVariable UUID productId,
+            @RequestParam boolean active
+    ) {
+        return ResponseEntity.ok(this.productService.toggleProductVisibility(productId, active));
+    }
+
+    @PatchMapping("{productId}/archive")
+    public ResponseEntity<ProductCreationResponse> archiveProduct(
+            @PathVariable UUID productId,
+            @RequestParam boolean archived
+    ) {
+        return ResponseEntity.ok(this.productService.archiveProduct(productId, archived));
+    }
+
     @PostMapping("{productId}/items")
     public ResponseEntity<ProductItemResponse> addNewProductItem(
             @PathVariable UUID productId,

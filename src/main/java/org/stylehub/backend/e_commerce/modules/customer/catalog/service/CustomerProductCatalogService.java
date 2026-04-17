@@ -6,16 +6,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.modules.customer.catalog.dto.*;
+import org.stylehub.backend.e_commerce.modules.customer.history.entity.RecentlyViewedProduct;
+import org.stylehub.backend.e_commerce.modules.customer.history.repository.RecentlyViewedProductRepository;
 import org.stylehub.backend.e_commerce.modules.customer.review.entity.ProductReview;
 import org.stylehub.backend.e_commerce.modules.customer.review.repository.ProductReviewRepository;
+import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.platform.media.entity.ProductItemImage;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.product.product_item.entity.ProductItem;
 import org.stylehub.backend.e_commerce.product.product_item.repository.ProductItemRepository;
 import org.stylehub.backend.e_commerce.product.product_item.size.Size;
 import org.stylehub.backend.e_commerce.product.repository.ProductRepository;
+import org.stylehub.backend.e_commerce.user.entity.User;
+import org.stylehub.backend.e_commerce.user.repository.UserRepository;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -29,6 +36,9 @@ public class CustomerProductCatalogService {
     private final ProductRepository productRepository;
     private final ProductItemRepository productItemRepository;
     private final ProductReviewRepository productReviewRepository;
+    private final RecentlyViewedProductRepository recentlyViewedProductRepository;
+    private final CurrentUserProvider currentUserProvider;
+    private final UserRepository userRepository;
 
     @Transactional
     public Map<String, Object> findProducts(
@@ -69,6 +79,11 @@ public class CustomerProductCatalogService {
     public ProductDetailsResponse findProductDetails(UUID productId) {
         Product product = this.productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        if (Boolean.FALSE.equals(product.getIsActive()) || Boolean.TRUE.equals(product.getIsArchived())) {
+            throw new IllegalArgumentException("Product not available");
+        }
+
+        trackRecentlyViewed(product);
 
         List<ProductItem> variants = this.productItemRepository.findAllByProduct_Id(productId);
         List<ProductReview> reviews = this.productReviewRepository.findAllByProduct_IdOrderByCreatedAtDesc(productId);
@@ -91,6 +106,36 @@ public class CustomerProductCatalogService {
                 variants.stream().map(this::toVariantResponse).toList(),
                 reviews.stream().map(this::toReviewResponse).toList()
         );
+    }
+
+    @Transactional
+    public ProductRecommendationsResponse findRecommendations() {
+        List<ProductSummaryResponse> recentlyViewed = this.recentlyViewedProductRepository
+                .findTop10ByUser_ExternalUserIdOrderByViewedAtDesc(currentUserProvider.externalId())
+                .stream()
+                .map(RecentlyViewedProduct::getProduct)
+                .filter(product -> Boolean.TRUE.equals(product.getIsActive()) && Boolean.FALSE.equals(product.getIsArchived()))
+                .map(this::toSummaryResponse)
+                .toList();
+
+        UUID preferredCategoryId = this.recentlyViewedProductRepository
+                .findTop10ByUser_ExternalUserIdOrderByViewedAtDesc(currentUserProvider.externalId())
+                .stream()
+                .findFirst()
+                .map(item -> item.getProduct().getCategory().getId())
+                .orElse(null);
+
+        List<Product> baseRecommendations = preferredCategoryId == null
+                ? this.productRepository.findTop20ByIsActiveTrueAndIsArchivedFalseOrderByIdDesc()
+                : this.productRepository.findTop20ByCategory_IdAndIsActiveTrueAndIsArchivedFalseOrderByIdDesc(preferredCategoryId);
+
+        List<ProductSummaryResponse> recommendations = baseRecommendations.stream()
+                .map(this::toSummaryResponse)
+                .sorted(Comparator.comparing(ProductSummaryResponse::productAverageRating).reversed())
+                .limit(10)
+                .toList();
+
+        return new ProductRecommendationsResponse(recommendations, recentlyViewed);
     }
 
     private ProductSummaryResponse toSummaryResponse(Product product) {
@@ -175,13 +220,27 @@ public class CustomerProductCatalogService {
             case "rating" -> Comparator.comparing(ProductSummaryResponse::productAverageRating);
             case "name" -> Comparator.comparing(ProductSummaryResponse::productNameEn, String.CASE_INSENSITIVE_ORDER);
             case "newest" -> Comparator.comparing(ProductSummaryResponse::productId);
+            case "relevance" -> Comparator.comparing(ProductSummaryResponse::productAverageRating)
+                    .thenComparing(ProductSummaryResponse::reviewCount);
             default -> Comparator.comparing(ProductSummaryResponse::productId);
         };
 
-        if ("desc".equalsIgnoreCase(sortDirection)) {
+        if ("desc".equalsIgnoreCase(sortDirection) || "relevance".equalsIgnoreCase(sortBy)) {
             comparator = comparator.reversed();
         }
 
         return summaries.stream().sorted(comparator).toList();
+    }
+
+    private void trackRecentlyViewed(Product product) {
+        User user = this.userRepository.findByExternalUserId(currentUserProvider.externalId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        RecentlyViewedProduct viewed = this.recentlyViewedProductRepository
+                .findByUser_ExternalUserIdAndProduct_Id(currentUserProvider.externalId(), product.getId())
+                .orElseGet(RecentlyViewedProduct::new);
+        viewed.setUser(user);
+        viewed.setProduct(product);
+        viewed.setViewedAt(Timestamp.valueOf(LocalDateTime.now()));
+        this.recentlyViewedProductRepository.save(viewed);
     }
 }

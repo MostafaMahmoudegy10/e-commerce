@@ -40,6 +40,16 @@ public class CustomerCommerceController {
         return ResponseEntity.ok(this.customerCommerceService.viewAddresses());
     }
 
+    @GetMapping("/notifications")
+    public ResponseEntity<List<NotificationResponse>> viewNotifications() {
+        return ResponseEntity.ok(this.customerCommerceService.viewNotifications());
+    }
+
+    @PatchMapping("/notifications/{notificationId}/read")
+    public ResponseEntity<NotificationResponse> markNotificationRead(@PathVariable UUID notificationId) {
+        return ResponseEntity.ok(this.customerCommerceService.markNotificationRead(notificationId));
+    }
+
     @PatchMapping("/addresses/{addressId}")
     public ResponseEntity<CustomerAddressResponse> updateAddress(
             @PathVariable UUID addressId,
@@ -116,6 +126,19 @@ public class CustomerCommerceController {
             @RequestBody PaymentRetryRequest request
     ) {
         return ResponseEntity.ok(this.customerCommerceService.retryPayment(orderId, request));
+    }
+
+    @PostMapping("/orders/{orderId}/returns")
+    public ResponseEntity<ReturnRequestResponse> createReturnRequest(
+            @PathVariable UUID orderId,
+            @RequestBody ReturnRequestCreateRequest request
+    ) {
+        return ResponseEntity.ok(this.customerCommerceService.createReturnRequest(orderId, request));
+    }
+
+    @GetMapping("/returns")
+    public ResponseEntity<List<ReturnRequestResponse>> viewReturnRequests() {
+        return ResponseEntity.ok(this.customerCommerceService.viewReturnRequests());
     }
 
     @PostMapping("/orders/{orderId}/reorder")

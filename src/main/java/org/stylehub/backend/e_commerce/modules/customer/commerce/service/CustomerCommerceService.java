@@ -19,11 +19,15 @@ import org.stylehub.backend.e_commerce.modules.customer.favorite.entity.Favorite
 import org.stylehub.backend.e_commerce.modules.customer.favorite.repository.FavoriteRepository;
 import org.stylehub.backend.e_commerce.modules.customer.review.entity.ProductReview;
 import org.stylehub.backend.e_commerce.modules.customer.review.repository.ProductReviewRepository;
+import org.stylehub.backend.e_commerce.modules.notification.service.NotificationService;
 import org.stylehub.backend.e_commerce.order.entity.Order;
 import org.stylehub.backend.e_commerce.order.entity.OrderStatus;
+import org.stylehub.backend.e_commerce.order.entity.ReturnRequest;
+import org.stylehub.backend.e_commerce.order.entity.ReturnRequestStatus;
 import org.stylehub.backend.e_commerce.order.item.entity.OrderItem;
 import org.stylehub.backend.e_commerce.order.item.repository.OrderItemRepository;
 import org.stylehub.backend.e_commerce.order.repository.OrderRepository;
+import org.stylehub.backend.e_commerce.order.repository.ReturnRequestRepository;
 import org.stylehub.backend.e_commerce.payment.entity.Payment;
 import org.stylehub.backend.e_commerce.payment.entity.PaymentStatus;
 import org.stylehub.backend.e_commerce.payment.repository.PaymentRepository;
@@ -63,6 +67,8 @@ public class CustomerCommerceService {
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
     private final ProductReviewRepository productReviewRepository;
+    private final ReturnRequestRepository returnRequestRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public FavoriteResponse addFavorite(UUID productId) {
@@ -307,6 +313,13 @@ public class CustomerCommerceService {
         payment.setTransactionId(request.transactionId());
         payment.setPaymentStatus(PaymentStatus.SUCCESS);
         Payment savedPayment = this.paymentRepository.save(payment);
+        this.notificationService.notifyUserByExternalId(
+                user.getExternalUserId(),
+                "Order confirmed",
+                "Your order " + savedOrder.getId() + " was created successfully.",
+                "ORDER_CREATED",
+                savedOrder.getId().toString()
+        );
 
         this.cartItemRepository.deleteAll(brandCartItems);
         if (this.cartItemRepository.findAllByCart_Id(cart.getId()).isEmpty()) {
@@ -370,6 +383,13 @@ public class CustomerCommerceService {
             payment.setPaymentStatus(PaymentStatus.REFUNDED);
             this.paymentRepository.save(payment);
         });
+        this.notificationService.notifyUserByExternalId(
+                user.getExternalUserId(),
+                "Refund confirmed",
+                "Your order " + order.getId() + " was cancelled and refund confirmed.",
+                "REFUND_CONFIRMED",
+                order.getId().toString()
+        );
 
         return toCustomerOrderResponse(this.orderRepository.save(order));
     }
@@ -396,7 +416,60 @@ public class CustomerCommerceService {
         }
 
         this.paymentRepository.save(payment);
+        this.notificationService.notifyUserByExternalId(
+                user.getExternalUserId(),
+                "Payment confirmed",
+                "Payment for order " + order.getId() + " succeeded.",
+                "PAYMENT_SUCCESS",
+                order.getId().toString()
+        );
         return toCustomerOrderResponse(this.orderRepository.save(order));
+    }
+
+    @Transactional
+    public ReturnRequestResponse createReturnRequest(UUID orderId, ReturnRequestCreateRequest request) {
+        User user = ensureCurrentCustomerUser();
+        if (request.reason() == null || request.reason().isBlank()) {
+            throw new IllegalArgumentException("Return reason is required");
+        }
+        Order order = this.orderRepository.findByIdAndUser_ExternalUserId(orderId, user.getExternalUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        if (order.getOrderStatus() != OrderStatus.DELIVERED) {
+            throw new IllegalArgumentException("Return request is allowed only for delivered orders");
+        }
+        ReturnRequest returnRequest = new ReturnRequest();
+        returnRequest.setOrder(order);
+        returnRequest.setUser(user);
+        returnRequest.setReason(request.reason());
+        returnRequest.setStatus(ReturnRequestStatus.PENDING);
+        ReturnRequest saved = this.returnRequestRepository.save(returnRequest);
+        this.notificationService.notifyUserByExternalId(
+                order.getBrand().getUser().getExternalUserId(),
+                "New return request",
+                "Customer requested return for order " + order.getId(),
+                "RETURN_REQUEST",
+                saved.getId().toString()
+        );
+        return toReturnRequestResponse(saved);
+    }
+
+    @Transactional
+    public List<ReturnRequestResponse> viewReturnRequests() {
+        User user = ensureCurrentCustomerUser();
+        return this.returnRequestRepository.findAllByUser_ExternalUserIdOrderByCreatedAtDesc(user.getExternalUserId())
+                .stream().map(this::toReturnRequestResponse).toList();
+    }
+
+    @Transactional
+    public List<NotificationResponse> viewNotifications() {
+        ensureCurrentCustomerUser();
+        return this.notificationService.findNotifications(currentUserProvider.externalId());
+    }
+
+    @Transactional
+    public NotificationResponse markNotificationRead(UUID notificationId) {
+        ensureCurrentCustomerUser();
+        return this.notificationService.markAsRead(notificationId, currentUserProvider.externalId());
     }
 
     @Transactional
@@ -751,6 +824,19 @@ public class CustomerCommerceService {
                 review.getRating(),
                 review.getComment(),
                 review.getCreatedAt()
+        );
+    }
+
+    private ReturnRequestResponse toReturnRequestResponse(ReturnRequest returnRequest) {
+        return new ReturnRequestResponse(
+                returnRequest.getId(),
+                returnRequest.getOrder().getId(),
+                returnRequest.getUser().getEmail(),
+                returnRequest.getStatus(),
+                returnRequest.getReason(),
+                returnRequest.getBrandResponse(),
+                returnRequest.getCreatedAt(),
+                returnRequest.getResolvedAt()
         );
     }
 }
