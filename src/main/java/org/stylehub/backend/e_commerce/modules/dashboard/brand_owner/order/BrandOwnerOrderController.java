@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order.dto.BrandOwnerCalendarEventResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order.dto.BrandOwnerOrderResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order.dto.BrandOwnerOrderStatusPatchRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order.dto.BrandOwnerReviewSummaryResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order.service.BrandOwnerOrderService;
 
 import java.util.List;
@@ -34,5 +35,10 @@ public class BrandOwnerOrderController {
             @RequestParam int month
     ) {
         return ResponseEntity.ok(this.brandOwnerOrderService.findCalendarEvents(year, month));
+    }
+
+    @GetMapping("reviews/summary")
+    public ResponseEntity<BrandOwnerReviewSummaryResponse> viewReviewSummary() {
+        return ResponseEntity.ok(this.brandOwnerOrderService.findReviewSummary());
     }
 }

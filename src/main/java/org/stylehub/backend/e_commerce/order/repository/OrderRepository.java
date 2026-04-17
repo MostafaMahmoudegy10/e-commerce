@@ -36,4 +36,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
               )
             """)
     List<Order> findBrandOrdersForCalendar(String externalUserId, Timestamp startDate, Timestamp endDate);
+
+    List<Order> findAllByUser_ExternalUserIdOrderByCreatedAtDesc(String externalUserId);
+
+    Optional<Order> findByIdAndUser_ExternalUserId(UUID orderId, String externalUserId);
 }

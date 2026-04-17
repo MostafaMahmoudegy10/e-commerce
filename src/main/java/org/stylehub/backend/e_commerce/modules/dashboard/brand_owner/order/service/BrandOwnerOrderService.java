@@ -6,10 +6,14 @@ import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order.dto.BrandOwnerCalendarEventResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order.dto.BrandOwnerOrderResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order.dto.BrandOwnerOrderStatusPatchRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order.dto.BrandOwnerReviewSummaryResponse;
+import org.stylehub.backend.e_commerce.modules.customer.review.repository.ProductReviewRepository;
 import org.stylehub.backend.e_commerce.order.entity.Order;
 import org.stylehub.backend.e_commerce.order.entity.OrderStatus;
 import org.stylehub.backend.e_commerce.order.repository.OrderRepository;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
+import org.stylehub.backend.e_commerce.brand.entity.Brand;
+import org.stylehub.backend.e_commerce.brand.repository.BrandRepository;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -25,6 +29,8 @@ public class BrandOwnerOrderService {
 
     private final OrderRepository orderRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final BrandRepository brandRepository;
+    private final ProductReviewRepository productReviewRepository;
 
     @Transactional
     public BrandOwnerOrderResponse patchOrderStatus(UUID orderId, BrandOwnerOrderStatusPatchRequest request) {
@@ -70,6 +76,20 @@ public class BrandOwnerOrderService {
                 .sorted(Comparator.comparing(BrandOwnerCalendarEventResponse::eventDate)
                         .thenComparing(BrandOwnerCalendarEventResponse::eventType))
                 .toList();
+    }
+
+    @Transactional
+    public BrandOwnerReviewSummaryResponse findReviewSummary() {
+        Brand brand = this.brandRepository.findByUser_ExternalUserId(currentUserProvider.externalId())
+                .orElseThrow(() -> new IllegalArgumentException("Brand not found for current user"));
+        double average = normalizeAverage(this.productReviewRepository.findAverageRatingByBrandId(brand.getId()));
+        long totalReviews = this.productReviewRepository.countByBrandId(brand.getId());
+        return new BrandOwnerReviewSummaryResponse(
+                brand.getId(),
+                brand.getBrandName(),
+                average,
+                totalReviews
+        );
     }
 
     private void addEventIfInMonth(
@@ -154,5 +174,12 @@ public class BrandOwnerOrderService {
         if (month < 1 || month > 12) {
             throw new IllegalArgumentException("Month is not valid");
         }
+    }
+
+    private double normalizeAverage(Double value) {
+        if (value == null) {
+            return 0.0;
+        }
+        return Math.round(value * 100.0) / 100.0;
     }
 }

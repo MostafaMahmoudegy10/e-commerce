@@ -47,6 +47,30 @@ public class Order {
     @Column(name = "cancelled_at")
     private Timestamp cancelledAt;
 
+    @Column(name = "estimated_delivery_at")
+    private Timestamp estimatedDeliveryAt;
+
+    @Column(name = "shipping_recipient_name")
+    private String shippingRecipientName;
+
+    @Column(name = "shipping_phone_number")
+    private String shippingPhoneNumber;
+
+    @Column(name = "shipping_address_line_1")
+    private String shippingAddressLine1;
+
+    @Column(name = "shipping_address_line_2")
+    private String shippingAddressLine2;
+
+    @Column(name = "shipping_city")
+    private String shippingCity;
+
+    @Column(name = "shipping_country")
+    private String shippingCountry;
+
+    @Column(name = "shipping_postal_code")
+    private String shippingPostalCode;
+
     @ManyToOne
     @JoinColumn(nullable = false,name = "user_id")
     private User user;

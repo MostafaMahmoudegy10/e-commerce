@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.stylehub.backend.e_commerce.product.product_item.entity.ProductItem;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,4 +50,6 @@ public interface ProductItemRepository extends JpaRepository<ProductItem, UUID> 
                   and u.externalUserId = :brandId
             """)
     Optional<ProductItem> findProductItemByIdAndProduct_Brand_User_ExternalUserId(UUID productItemId, String brandId);
+
+    List<ProductItem> findAllByProduct_Id(UUID productId);
 }
