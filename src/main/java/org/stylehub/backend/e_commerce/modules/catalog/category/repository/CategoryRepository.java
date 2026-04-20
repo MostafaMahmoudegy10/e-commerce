@@ -22,22 +22,26 @@ public interface CategoryRepository extends JpaRepository<Category,UUID> {
 
     // this query will return the categories of a brand
     @Query("""
-          select new org.stylehub.backend.e_commerce.modules.catalog.category.dto.findAllByBrandId(c.id,c.categoryNameEn,c.categoryNameAr,
-                    c.categoryDescriptionEn,
-                    c.categoryDescriptionAr,c.imageUrl)
-               from Category c
-                     inner join Brand b 
-                            on b.id =c.brand.id
-                                      inner join User u
-                                                on u.externalUserId=:externalId                
+            select new org.stylehub.backend.e_commerce.modules.catalog.category.dto.findAllByBrandId(
+                 c.id,
+                 c.categoryNameEn,
+                 c.categoryNameAr,
+                 c.categoryDescriptionEn,
+                 c.categoryDescriptionAr,
+                 c.imageUrl
+           )
+           from Category c
+           where c.brand.user.externalUserId = :externalId            
            """)
-    Page<findAllByBrandId> findAllByBrand_Id(@Param("externalId") String externalId, Pageable pageable);
+    Page<findAllByBrandId> findAllByBrandExternalUserId(@Param("externalId") String externalId, Pageable pageable);
 
 
     @Query("""
-           select c from Category c 
-                      where c.id=:categoryId and c.brand.user.externalUserId=:externalUserId
-                      """)
-    Optional<Category> findCategoryByIdAndBrand_User_ExternalUserId(@Param("categoryId") UUID categoryId,
-                                        @Param("externalUserId")   String externalId);
+                 select c from Category c
+           where c.id = :categoryId and c.brand.user.externalUserId = :externalUserId
+           """)
+    Optional<Category> findCategoryByIdAndBrand_User_ExternalUserId(
+            @Param("categoryId") UUID categoryId,
+            @Param("externalUserId") String externalId
+    );
 }

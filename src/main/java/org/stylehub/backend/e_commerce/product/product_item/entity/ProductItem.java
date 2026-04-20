@@ -9,6 +9,7 @@ import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.product.product_item.size.Size;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,11 +35,11 @@ public class ProductItem {
 
     @OneToMany(mappedBy = "productItem",
     cascade = {CascadeType.PERSIST, CascadeType.MERGE,CascadeType.REMOVE})
-    private List<ProductItemImage> productItemImages;
+    private List<ProductItemImage> productItemImages=new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "product_item_id")
-    private List<Size>sizeList;
+    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.PERSIST, orphanRemoval = true,
+    mappedBy = "productItem")
+    private List<Size>sizeList=new ArrayList<>();
 
     @Override
     public String toString() {

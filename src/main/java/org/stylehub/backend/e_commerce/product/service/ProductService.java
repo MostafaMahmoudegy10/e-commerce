@@ -122,6 +122,9 @@ public class ProductService {
         safelyDeleteProductThumbnail(product.getPublicId());
         this.productRepository.delete(product);
     }
+    public  Product findProductById(UUID productId) {
+        return this.productRepository.getReferenceById(productId);
+    }
 
     private ProductCreationResponse toResponse(Product product) {
         return new ProductCreationResponse(
