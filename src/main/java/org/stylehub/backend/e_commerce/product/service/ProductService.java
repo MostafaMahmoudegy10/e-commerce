@@ -6,12 +6,12 @@ import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.brand.service.BrandService;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.dto.ProductPatchRequest;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.product.dto.ProductCreationRequest;
 import org.stylehub.backend.e_commerce.product.dto.ProductCreationResponse;
-import org.stylehub.backend.e_commerce.product.dto.ProductPatchRequest;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.product.repository.ProductRepository;
 

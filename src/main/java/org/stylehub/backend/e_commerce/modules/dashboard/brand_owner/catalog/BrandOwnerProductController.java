@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.dto.ProductPatchRequest;
 import org.stylehub.backend.e_commerce.product.dto.ProductCreationRequest;
 import org.stylehub.backend.e_commerce.product.dto.ProductCreationResponse;
-import org.stylehub.backend.e_commerce.product.dto.ProductPatchRequest;
 import org.stylehub.backend.e_commerce.product.service.ProductService;
 
 import java.util.UUID;

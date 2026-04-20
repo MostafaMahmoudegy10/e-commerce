@@ -1,11 +1,11 @@
-package org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.service;
+package org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.dto.*;
-import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.entity.Otp;
-import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.repository.OtpRepository;
+import org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.dto.*;
+import org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.entity.Otp;
+import org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.repository.OtpRepository;
 import org.stylehub.backend.e_commerce.platform.mail.EmailService;
 import org.stylehub.backend.e_commerce.platform.security.jwt.DashboardTokenService;
 import org.stylehub.backend.e_commerce.user.entity.User;
@@ -34,7 +34,7 @@ public class OtpService {
     private final DashboardTokenService dashboardTokenService;
 
     @Transactional
-    public GenerateOtpResponse  generateOtp(GenerateOtpRequest generateOtpRequest){
+    public GenerateOtpResponse generateOtp(GenerateOtpRequest generateOtpRequest){
         // first check of the generated request dto "fields"
         validateGenrateRequest(generateOtpRequest);
 

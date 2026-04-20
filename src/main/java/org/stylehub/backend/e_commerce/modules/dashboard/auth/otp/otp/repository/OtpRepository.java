@@ -1,8 +1,8 @@
-package org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.repository;
+package org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.entity.Otp;
-import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.entity.OtpPurpose;
+import org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.entity.Otp;
+import org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.entity.OtpPurpose;
 
 import java.util.Optional;
 import java.util.UUID;

@@ -1,6 +1,4 @@
-package org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.dto;
-
-import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.entity.OtpPurpose;
+package org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.dto;
 
 public record VerifyOtpResponse(
         boolean verified,

@@ -1,4 +1,4 @@
-package org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.auth.otp.dto;
+package org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.dto;
 
 import java.time.Instant;
 import java.util.UUID;
