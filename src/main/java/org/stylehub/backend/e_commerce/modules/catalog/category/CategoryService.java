@@ -80,9 +80,12 @@ public class CategoryService {
     }
 
     public Map<String,Object> findAllBrandCategories(Pageable pageable, String brandId){
-        // first get owner brand id
+        // `brandId` here represents the brand owner external user id.
+        this.brandRepository.findByUser_ExternalUserId(brandId)
+                .orElseThrow(() -> new IllegalArgumentException("Brand profile not found for provided external id"));
+
         Page<findAllByBrandId> categoryPage
-                =this.categoryRepository.findAllByBrand_Id(brandId,pageable);
+                =this.categoryRepository.findAllByBrandExternalUserId(brandId,pageable);
         return mapPaginatedResponse(categoryPage);
     }
 
