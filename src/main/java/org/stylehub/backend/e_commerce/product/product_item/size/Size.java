@@ -1,7 +1,6 @@
 package org.stylehub.backend.e_commerce.product.product_item.size;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,4 +29,11 @@ public class Size {
     @JoinColumn(name = "product_item_id")
     private ProductItem productItem;
 
+    public void addToStock(Integer stock) {
+        this.stock += stock;
+    }
+
+    public  void removeFromStock(Integer stock) {
+        this.stock -= stock;
+    }
 }

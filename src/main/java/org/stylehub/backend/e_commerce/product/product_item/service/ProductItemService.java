@@ -2,11 +2,11 @@ package org.stylehub.backend.e_commerce.product.product_item.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.ProductItemCreateRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.ProductItemPatchRequest;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.ProductItemResponse;
-import org.stylehub.backend.e_commerce.platform.media.ProductItemImageRepo;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.SizeDtoReqRes;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.entity.ProductItemImage;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
@@ -18,97 +18,209 @@ import org.stylehub.backend.e_commerce.product.product_item.repository.SizeRepo;
 import org.stylehub.backend.e_commerce.product.product_item.size.Size;
 import org.stylehub.backend.e_commerce.product.service.ProductService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductItemService {
 
     private final ProductItemRepository productItemRepository;
-    private final CurrentUserProvider  currentUserProvider;
-    private final ProductService  productService;
+    private final CurrentUserProvider currentUserProvider;
+    private final ProductService productService;
     private final ImageService imageService;
-    private final ProductItemImageRepo productItemImageRepo;
     private final SizeRepo sizeRepo;
 
     @Transactional
     public ProductItemResponse createProductItem(UUID productId, ProductItemCreateRequest request) {
-            // first get current brand
-            String externalBrandId=this.getExternalBrandId(currentUserProvider);
+        String externalBrandId = getExternalBrandId();
 
-            // make sure that the product is there
-            Product product = this.productService.findProductById(productId);
+        Product product = productService.findProductById(productId, externalBrandId);
 
-            if(product == null){
-                throw new IllegalArgumentException("Product not found for this brand");
-            }
-
-            // validate the request dto
-            validateProductItemCreationRequest(request);
+        validateProductItemCreationRequest(request);
 
         ProductItem productItem = new ProductItem();
+        productItem.setProduct(product);
+        productItem.setColor(request.color());
+        productItem.setSku(request.sku());
 
-        // extract image
-        List<UploadResponse>uploadResponseList=
-                request.productItemImages()
-                        .stream()
-                        .map(this.imageService::uploadImage).toList();
+        List<UploadResponse> uploadResponses = request.productItemImages()
+                .stream()
+                .map(imageService::uploadImage)
+                .toList();
 
-        // extract them as product item image
-        List<ProductItemImage> productItemImageList=uploadResponseList
-                .stream().map( (image)->{
-                        return this.getProductItemImage(image,productItem);
-                        }
-                ).toList();
+        List<ProductItemImage> images = uploadResponses.stream()
+                .map(uploadResponse -> toProductItemImage(uploadResponse, productItem))
+                .toList();
 
-            List<Size>savedSize= request.sizeAndStockList().stream().map((size)->{
-                size.setProductItem(productItem);
-                return size;
-            }).toList();
+        List<Size> sizes = request.sizeAndStockList().stream()
+                .map(dto -> toNewSize(dto, productItem))
+                .toList();
 
-            // creation of product item
-            productItem.setProduct(product);
-            productItem.setColor(request.color());
-            productItem.setSku(request.sku());
-            productItem.getProductItemImages().addAll(productItemImageList);
-            productItem.getSizeList().addAll(savedSize);
-            ProductItem savedProductItem =this.productItemRepository.save(productItem);
+        productItem.getProductItemImages().addAll(images);
+        productItem.getSizeList().addAll(sizes);
 
-            return new ProductItemResponse(
-                    "Product Item Created !",
-                       savedProductItem.getId()
+        ProductItem savedProductItem = productItemRepository.save(productItem);
+
+        return new ProductItemResponse(
+                "Product Item Created !",
+                savedProductItem.getId()
+        );
+    }
+
+    @Transactional
+    public ProductItemResponse updateProductItem(UUID productId, UUID productItemId, ProductItemPatchRequest request) {
+        String brandId = getExternalBrandId();
+
+        Product product = productService.findProductById(productId,brandId);
+
+        ProductItem item = findProductItem(productItemId,productId,brandId);
+
+        if (!item.getProduct().getId().equals(product.getId())) {
+            throw new IllegalArgumentException("Product item does not belong to product");
+        }
+
+        if (request.color() != null && !request.color().isBlank()) {
+            boolean colorExists = productItemRepository.existsByIdAndColorAndProduct_IdAndProduct_Brand_User_ExternalUserId(
+                    productItemId,
+                    request.color(),
+                    productId,
+                    brandId
             );
+
+            if (colorExists) {
+                throw new IllegalArgumentException("Product item color already exists for this product item");
+            }
+
+            item.setColor(request.color());
+        }
+
+        if (request.sku() != null && !request.sku().isBlank()) {
+            item.setSku(request.sku());
+        }
+
+        patchSizes(request.size(), productItemId, brandId, item);
+
+
+        List<UploadResponse> uploadResponses = request.images()
+                .stream()
+                .map(imageService::uploadImage)
+                .toList();
+
+        List<ProductItemImage> images = uploadResponses.stream()
+                .map(uploadResponse -> toProductItemImage(uploadResponse, item))
+                .toList();
+
+        item.getProductItemImages().addAll(images);
+
+        ProductItem savedItem = productItemRepository.saveAndFlush(item);
+
+        return toResponse(savedItem);
+    }
+    public void deleteProductItem(UUID productId, UUID productItemId) {
+        ProductItem productItem = findProductItem(productItemId, productId, getExternalBrandId());
+        safelyDeleteIagesOfProductItem(productItem.getProductItemImages());
+        productItemRepository.delete(productItem);
+    }
+
+    public ProductItem findProductItem(UUID productItemId,UUID productId, String brandId) {
+        return productItemRepository.findByIdAndProduct_IdAndProduct_Brand_User_ExternalUserId(productItemId,productId, brandId)
+                .orElseThrow(() -> new IllegalArgumentException("Product Item Not Found For This Brand !"));
+    }
+    private void safelyDeleteIagesOfProductItem(List<ProductItemImage> productItemImages) {
+        productItemImages.forEach(image -> {
+            this.imageService.deleteImage(image.getPublicId());
+        });
+    }
+
+    private ProductItem patchSizes(List<SizeDtoReqRes> requestedSizes, UUID productItemId, String brandId, ProductItem item) {
+        if (requestedSizes == null || requestedSizes.isEmpty()) {
+            return item;
+        }
+
+        for (SizeDtoReqRes requestedSize : requestedSizes) {
+                sizeRepo.findByIdAndProductItem_IdAndProductItem_Product_Brand_User_ExternalUserId(
+                        requestedSize.id(),
+                        productItemId,
+                        brandId
+                ).ifPresentOrElse(
+                        existingSize -> {
+                            if(requestedSize.sizeName()!=null && !requestedSize.sizeName().isBlank()) {
+                                existingSize.setSizeName(requestedSize.sizeName());
+                            }
+                            if(requestedSize.stock()!=null){
+                                existingSize.addToStock(requestedSize.stock());
+                            }
+                            item.getSizeList().add(existingSize);
+                        },
+                        () -> {
+                            Size newSize = new Size();
+                            if(requestedSize.sizeName()!=null && !requestedSize.sizeName().isBlank()) {
+                                newSize.setSizeName(requestedSize.sizeName());
+                            }
+                            if(requestedSize.stock()!=null) {
+                                newSize.setStock(requestedSize.stock());
+                            }
+                            newSize.setProductItem(item);
+                            item.getSizeList().add(newSize);
+                        }
+                );
+        }
+        return item;
     }
 
     private void validateProductItemCreationRequest(ProductItemCreateRequest request) {
-        if(request.color()==null){
+        if (request.color() == null || request.color().isBlank()) {
             throw new IllegalArgumentException("Color Not Found");
         }
-        if(request.sku()==null){
+
+        if (request.sku() == null || request.sku().isBlank()) {
             throw new IllegalArgumentException("Sku Not Found");
         }
-        if(request.sizeAndStockList().get(0).getSizeName()==null){
-            throw new IllegalArgumentException("Size Not Found");
+
+        if (request.productItemImages() == null || request.productItemImages().isEmpty()) {
+            throw new IllegalArgumentException("Images For Product Item Not Found");
         }
-        if(request.sizeAndStockList().get(0).getStock()==null){
-            throw new IllegalArgumentException("Stock Number Not Found");
+
+        if (request.sizeAndStockList() == null || request.sizeAndStockList().isEmpty()) {
+            throw new IllegalArgumentException("Size List Not Found");
         }
-        if(request.productItemImages()==null){
-            throw new IllegalArgumentException("Images For Product Item  Not Found");
+
+        for (Size size : request.sizeAndStockList()) {
+            if (size.getSizeName() == null) {
+                throw new IllegalArgumentException("Size Not Found");
+            }
+            if (size.getStock() == null) {
+                throw new IllegalArgumentException("Stock Number Not Found");
+            }
         }
     }
 
-    private ProductItemImage getProductItemImage(UploadResponse uploadResponse,ProductItem item) {
-        ProductItemImage productItemImage=new ProductItemImage();
+    private ProductItemImage toProductItemImage(UploadResponse uploadResponse, ProductItem item) {
+        ProductItemImage productItemImage = new ProductItemImage();
         productItemImage.setImageUrl(uploadResponse.imageUrl());
         productItemImage.setPublicId(uploadResponse.publicId());
         productItemImage.setProductItem(item);
         return productItemImage;
     }
 
-    private String getExternalBrandId(CurrentUserProvider currentUserProvider) {
-        return this.currentUserProvider.externalId();
+    private Size toNewSize(Size dto, ProductItem productItem) {
+        Size size = new Size();
+        size.setSizeName(dto.getSizeName());
+        size.setStock(dto.getStock());
+        size.setProductItem(productItem);
+        return size;
+    }
+
+    private ProductItemResponse toResponse(ProductItem item) {
+        return new ProductItemResponse(
+                "Product Item Updated !",
+                item.getId()
+        );
+    }
+
+    private String getExternalBrandId() {
+        return currentUserProvider.externalId();
     }
 }

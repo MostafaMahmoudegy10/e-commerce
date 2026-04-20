@@ -122,8 +122,9 @@ public class ProductService {
         safelyDeleteProductThumbnail(product.getPublicId());
         this.productRepository.delete(product);
     }
-    public  Product findProductById(UUID productId) {
-        return this.productRepository.getReferenceById(productId);
+    public  Product findProductById(UUID productId,String externalUserId) {
+        return this.productRepository.findProductByIdAndBrand_User_ExternalUserId(productId,externalUserId)
+                .orElseThrow(()->new IllegalArgumentException("Product not found for this brand"));
     }
 
     private ProductCreationResponse toResponse(Product product) {

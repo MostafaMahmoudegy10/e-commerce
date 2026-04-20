@@ -44,15 +44,15 @@ public class Product {
     @Column(name = "public_id",nullable = false)
     private String publicId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id",nullable = false)
     private Brand brand;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id",nullable = false)
     private Category category;
 
-    @OneToMany(mappedBy = "product",
+    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY,
             cascade = {CascadeType.PERSIST, CascadeType.MERGE,CascadeType.REMOVE})
     private List<ProductItem>  productItems;
 
