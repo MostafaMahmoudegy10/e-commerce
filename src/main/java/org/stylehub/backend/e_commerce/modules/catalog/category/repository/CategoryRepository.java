@@ -5,11 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.stylehub.backend.e_commerce.modules.catalog.category.dto.FindAllCategoryResponse;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.findAllByBrandId;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,9 +27,10 @@ public interface CategoryRepository extends JpaRepository<Category,UUID> {
                      inner join Brand b 
                             on b.id =c.brand.id
                                       inner join User u
-                                                on u.externalUserId=:externalId                
+                                                on u.id = b.user.id
+          where u.externalUserId=:externalId
            """)
-    Page<findAllByBrandId> findAllByBrand_Id(@Param("externalId") String externalId, Pageable pageable);
+    Page<findAllByBrandId> findAllByBrandExternalUserId(@Param("externalId") String externalId, Pageable pageable);
 
 
     @Query("""
