@@ -8,7 +8,6 @@ import org.stylehub.backend.e_commerce.platform.media.entity.ProductItemImage;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.product.product_item.size.Size;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +26,9 @@ public class ProductItem {
 
     @Column(length = 30, nullable = false,columnDefinition = "varchar(30)")
     private String sku;
+
+    @Column(name = "stock", nullable = false)
+    private Integer stock;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
