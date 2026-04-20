@@ -81,38 +81,11 @@ public class ProductItemService {
             throw new IllegalArgumentException("Product item does not belong to product");
         }
 
-        if (request.color() != null && !request.color().isBlank()) {
-            boolean colorExists = productItemRepository.existsByIdAndColorAndProduct_IdAndProduct_Brand_User_ExternalUserId(
-                    productItemId,
-                    request.color(),
-                    productId,
-                    brandId
-            );
-
-            if (colorExists) {
-                throw new IllegalArgumentException("Product item color already exists for this product item");
-            }
-
-            item.setColor(request.color());
-        }
-
         if (request.sku() != null && !request.sku().isBlank()) {
             item.setSku(request.sku());
         }
 
         patchSizes(request.size(), productItemId, brandId, item);
-
-
-        List<UploadResponse> uploadResponses = request.images()
-                .stream()
-                .map(imageService::uploadImage)
-                .toList();
-
-        List<ProductItemImage> images = uploadResponses.stream()
-                .map(uploadResponse -> toProductItemImage(uploadResponse, item))
-                .toList();
-
-        item.getProductItemImages().addAll(images);
 
         ProductItem savedItem = productItemRepository.saveAndFlush(item);
 
@@ -150,9 +123,8 @@ public class ProductItemService {
                                 existingSize.setSizeName(requestedSize.sizeName());
                             }
                             if(requestedSize.stock()!=null){
-                                existingSize.addToStock(requestedSize.stock());
+                                adjustSizeStock(existingSize, requestedSize.stock());
                             }
-                            item.getSizeList().add(existingSize);
                         },
                         () -> {
                             Size newSize = new Size();
@@ -218,6 +190,20 @@ public class ProductItemService {
                 "Product Item Updated !",
                 item.getId()
         );
+    }
+
+    private void adjustSizeStock(Size existingSize, Integer requestedStock) {
+        int currentStock = Optional.ofNullable(existingSize.getStock()).orElse(0);
+        int delta = requestedStock - currentStock;
+
+        if (delta < 0) {
+            existingSize.removeFromStock(Math.abs(delta));
+            return;
+        }
+
+        if (delta > 0) {
+            existingSize.addToStock(delta);
+        }
     }
 
     private String getExternalBrandId() {
