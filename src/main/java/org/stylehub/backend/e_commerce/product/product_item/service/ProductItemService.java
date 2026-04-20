@@ -113,33 +113,50 @@ public class ProductItemService {
         }
 
         for (SizeDtoReqRes requestedSize : requestedSizes) {
-                sizeRepo.findByIdAndProductItem_IdAndProductItem_Product_Brand_User_ExternalUserId(
-                        requestedSize.id(),
-                        productItemId,
-                        brandId
-                ).ifPresentOrElse(
-                        existingSize -> {
-                            if(requestedSize.sizeName()!=null && !requestedSize.sizeName().isBlank()) {
-                                existingSize.setSizeName(requestedSize.sizeName());
-                            }
-                            if(requestedSize.stock()!=null){
-                                adjustSizeStock(existingSize, requestedSize.stock());
-                            }
-                        },
-                        () -> {
-                            Size newSize = new Size();
-                            if(requestedSize.sizeName()!=null && !requestedSize.sizeName().isBlank()) {
-                                newSize.setSizeName(requestedSize.sizeName());
-                            }
-                            if(requestedSize.stock()!=null) {
-                                newSize.setStock(requestedSize.stock());
-                            }
-                            newSize.setProductItem(item);
-                            item.getSizeList().add(newSize);
+            Optional<Size> existingSize = resolveExistingSize(requestedSize, productItemId, brandId);
+            existingSize.ifPresentOrElse(
+                    size -> {
+                        if (requestedSize.sizeName() != null && !requestedSize.sizeName().isBlank()) {
+                            size.setSizeName(requestedSize.sizeName());
                         }
-                );
+                        if (requestedSize.stock() != null) {
+                            adjustSizeStock(size, requestedSize.stock());
+                        }
+                    },
+                    () -> {
+                        if (requestedSize.sizeName() == null || requestedSize.sizeName().isBlank()) {
+                            throw new IllegalArgumentException("Size name is required for new size");
+                        }
+
+                        Size newSize = new Size();
+                        newSize.setSizeName(requestedSize.sizeName());
+                        newSize.setStock(Optional.ofNullable(requestedSize.stock()).orElse(0));
+                        newSize.setProductItem(item);
+                        item.getSizeList().add(newSize);
+                    }
+            );
         }
         return item;
+    }
+
+    private Optional<Size> resolveExistingSize(SizeDtoReqRes requestedSize, UUID productItemId, String brandId) {
+        if (requestedSize.id() != null) {
+            return sizeRepo.findByIdAndProductItem_IdAndProductItem_Product_Brand_User_ExternalUserId(
+                    requestedSize.id(),
+                    productItemId,
+                    brandId
+            );
+        }
+
+        if (requestedSize.sizeName() != null && !requestedSize.sizeName().isBlank()) {
+            return sizeRepo.findBySizeNameAndProductItem_IdAndProductItem_Product_Brand_User_ExternalUserId(
+                    requestedSize.sizeName(),
+                    productItemId,
+                    brandId
+            );
+        }
+
+        return Optional.empty();
     }
 
     private void validateProductItemCreationRequest(ProductItemCreateRequest request) {
