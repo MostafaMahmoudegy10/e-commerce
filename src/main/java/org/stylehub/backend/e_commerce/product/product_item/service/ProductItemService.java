@@ -49,6 +49,7 @@ public class ProductItemService {
         productItem.setColor(request.color());
         productItem.setSku(request.sku());
         productItem.setProduct(product);
+        productItem.setStock(calculateTotalStock(request.sizeList()));
         productItem.setSizeList(buildSizes(request.sizeList(), productItem));
         productItem.setProductItemImages(buildImages(request.imagesOfProductItem(), productItem));
 
@@ -70,6 +71,7 @@ public class ProductItemService {
         if (request.sizeList() != null && !request.sizeList().isEmpty()) {
             validateSizes(request.sizeList());
             this.sizeRepository.deleteByProductItem_Id(productItemId);
+            productItem.setStock(calculateTotalStock(request.sizeList()));
             productItem.setSizeList(buildSizes(request.sizeList(), productItem));
         }
         if (request.imagesOfProductItem() != null && !request.imagesOfProductItem().isEmpty()) {
@@ -149,6 +151,12 @@ public class ProductItemService {
         if (exists) {
             throw new IllegalArgumentException("Product item color already exists for this product");
         }
+    }
+
+    private Integer calculateTotalStock(List<ProductItemSizeRequest> sizeRequests) {
+        return sizeRequests.stream()
+                .map(ProductItemSizeRequest::stock)
+                .reduce(0, Integer::sum);
     }
 
     private List<Size> buildSizes(List<ProductItemSizeRequest> sizeRequests, ProductItem productItem) {
