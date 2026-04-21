@@ -27,7 +27,7 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
     private final Logger logger= LoggerFactory.getLogger(CustomerProductRepositoryImpl.class);
 
     @Override
-    public Map<String, Object> findAllProductWithFilter(FindAllProductFilterRequestDto dtoRequest, Pageable pageable) {
+    public Map<String, Object> findAllProductWithFilter(FindAllProductFilterRequestDto dtoRequest, Pageable pageable,String brandId) {
         try(EntityManager entityManager=this.getEntityManager()) {
             entityManager.getTransaction().begin();
 
@@ -42,6 +42,15 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
 
            // we create a predicate
            Predicate predicate = cb.conjunction();
+            predicate = cb.and(
+                    predicate,
+                    cb.equal(
+                            rootProduct.get("brand")
+                                    .get("user")
+                                    .get("externalUserId"),
+                            brandId
+                    )
+            );
            if(dtoRequest.minPrice()!=null ) {
                predicate=cb.and(predicate,
                        cb.greaterThanOrEqualTo(rootProduct.get("price"), dtoRequest.minPrice()));
@@ -93,17 +102,19 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
           Root<Product>countRootProduct=countQuery.from(Product.class);
           Join<Product,Category> countPrdoucCategoryJoin=countRootProduct.join("category", JoinType.INNER);
           Predicate countPredicate=countCB.conjunction();
+          countPredicate=countCB.and(countPredicate,
+                  countCB.lessThanOrEqualTo(rootProduct.get("brand").get("user").get("externalUserId"), brandId));
 
             if(dtoRequest.minPrice()!=null ) {
-                countPredicate=cb.and(countPredicate,
+                countPredicate=countCB.and(countPredicate,
                         countCB.greaterThanOrEqualTo(countRootProduct.get("price"), dtoRequest.minPrice()));
             }
             if(dtoRequest.maxPrice()!=null ) {
-                countPredicate=cb.and(countPredicate,
+                countPredicate=countCB.and(countPredicate,
                         countCB.lessThanOrEqualTo(countRootProduct.get("price"), dtoRequest.maxPrice()));
             }
             if(dtoRequest.categoryName()!=null ) {
-                countPredicate=cb.and(countPredicate,
+                countPredicate=countCB.and(countPredicate,
                         countCB.equal(countPrdoucCategoryJoin.get("categoryNameEn"), dtoRequest.categoryName())
                 );
             }

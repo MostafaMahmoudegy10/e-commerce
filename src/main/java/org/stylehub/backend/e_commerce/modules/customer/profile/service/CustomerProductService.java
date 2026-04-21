@@ -9,6 +9,7 @@ import org.stylehub.backend.e_commerce.modules.customer.profile.repository.produ
 import org.stylehub.backend.e_commerce.product.repository.ProductRepository;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -16,8 +17,8 @@ public class CustomerProductService {
 
     private final CustomerProductRepository productRepository;
 
-    public Map<String,Object> findAllProductWithFilter(FindAllProductFilterRequestDto dtoRequest, Pageable pageable) {
+    public Map<String,Object> findAllProductWithFilter(FindAllProductFilterRequestDto dtoRequest, Pageable pageable, UUID brandId) {
 
-        return this. productRepository.findAllProductWithFilter(dtoRequest,pageable);
+        return this. productRepository.findAllProductWithFilter(dtoRequest,pageable,String.valueOf(brandId));
     }
 }

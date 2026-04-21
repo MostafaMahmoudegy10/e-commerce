@@ -9,6 +9,7 @@ import org.stylehub.backend.e_commerce.modules.catalog.category.dto.FindAllCateg
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.findAllByBrandId;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,4 +45,19 @@ public interface CategoryRepository extends JpaRepository<Category,UUID> {
             @Param("categoryId") UUID categoryId,
             @Param("externalUserId") String externalId
     );
+
+//    @Query("""
+//            select c.categoryNameEn,c.categoryDescriptionAr
+//            from Category c
+//            inner join Brand  b
+//            on b.id =c.brand.id
+//            inner join User  u
+//            on u.id=b.user.id
+//            where c.parentCategory.id is null
+//                  and
+//                  u.externalUserId=:brandId
+//            """)
+//    Object[] findAllParentCategories(String brandId,String parentCategoryName);
+
+
 }

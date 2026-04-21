@@ -7,5 +7,5 @@ import java.util.Map;
 
 public interface CustomerProductRepository{
 
-    public Map<String,Object> findAllProductWithFilter(FindAllProductFilterRequestDto dtoRequest, Pageable pageable);
+    public Map<String,Object> findAllProductWithFilter(FindAllProductFilterRequestDto dtoRequest, Pageable pageable,String brandId);
 }

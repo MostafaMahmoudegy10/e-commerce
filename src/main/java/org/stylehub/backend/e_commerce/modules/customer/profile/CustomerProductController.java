@@ -24,6 +24,6 @@ public class CustomerProductController {
         @ModelAttribute FindAllProductFilterRequestDto dtoRequest,
         @PageableDefault(size = 10) Pageable pageable
     ) {
-        return ResponseEntity.ok(this.customerProductService.findAllProductWithFilter(dtoRequest,pageable));
+        return ResponseEntity.ok(this.customerProductService.findAllProductWithFilter(dtoRequest,pageable,brandId));
     }
 }
