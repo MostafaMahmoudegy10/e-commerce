@@ -39,4 +39,5 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
                   and p.id <> :productId
             """)
     boolean existsProductByBrand_User_ExternalUserIdAndIdNot(String productName, String generalBrandId, UUID productId);
+
 }

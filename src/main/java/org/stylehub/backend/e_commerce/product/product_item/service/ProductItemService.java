@@ -85,7 +85,7 @@ public class ProductItemService {
             item.setSku(request.sku());
         }
 
-        patchSizes(request.size(), productItemId, brandId, item);
+        item = patchSizes(request.size(), productItemId, brandId, item);
 
         ProductItem savedItem = productItemRepository.saveAndFlush(item);
 
@@ -130,6 +130,7 @@ public class ProductItemService {
 
                         Size newSize = new Size();
                         newSize.setSizeName(requestedSize.sizeName());
+                        System.out.println(requestedSize.sizeName());
                         newSize.setStock(Optional.ofNullable(requestedSize.stock()).orElse(0));
                         newSize.setProductItem(item);
                         item.getSizeList().add(newSize);
