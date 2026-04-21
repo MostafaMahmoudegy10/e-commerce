@@ -37,7 +37,7 @@ public class ProductItem {
     cascade = {CascadeType.PERSIST, CascadeType.MERGE,CascadeType.REMOVE})
     private List<ProductItemImage> productItemImages=new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.PERSIST, orphanRemoval = true,
+    @OneToMany(fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true,
     mappedBy = "productItem")
     private List<Size>sizeList=new ArrayList<>();
 
