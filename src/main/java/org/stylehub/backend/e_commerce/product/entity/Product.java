@@ -9,8 +9,8 @@ import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.product.product_item.entity.ProductItem;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -55,6 +55,6 @@ public class Product {
 
     @OneToMany(mappedBy = "product",fetch = FetchType.LAZY,
             cascade = {CascadeType.PERSIST, CascadeType.MERGE,CascadeType.REMOVE})
-    private List<ProductItem>  productItems=new ArrayList<>();
+    private Set<ProductItem>  productItems=new HashSet<>();
 
 }
