@@ -26,6 +26,9 @@ public class ProductItem {
     @Column(name = "color", nullable = false,columnDefinition = "varchar(20)")
     private String color;
 
+    @Column(columnDefinition = "VARCHAR(255)")
+    private String colorCode;
+
     @Column(length = 30, nullable = false,columnDefinition = "varchar(30)")
     private String sku;
 

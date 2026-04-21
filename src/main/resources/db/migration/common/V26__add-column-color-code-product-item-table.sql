@@ -1,0 +1,1 @@
+alter table product_item add column color_code varchar(255) ;

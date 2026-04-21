@@ -8,6 +8,7 @@ import java.util.List;
 public record ProductItemCreateRequest(
         String color,
         String sku,
+        String colorCode,
         List<Size>sizeAndStockList,
         List<MultipartFile>productItemImages
 ) {

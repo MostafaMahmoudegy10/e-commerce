@@ -44,6 +44,7 @@ public class ProductItemService {
         productItem.setProduct(product);
         productItem.setColor(request.color());
         productItem.setSku(request.sku());
+        productItem.setColorCode(request.colorCode());
 
         List<UploadResponse> uploadResponses = request.productItemImages()
                 .stream()

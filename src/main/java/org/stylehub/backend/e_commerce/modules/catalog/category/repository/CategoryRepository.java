@@ -46,18 +46,6 @@ public interface CategoryRepository extends JpaRepository<Category,UUID> {
             @Param("externalUserId") String externalId
     );
 
-//    @Query("""
-//            select c.categoryNameEn,c.categoryDescriptionAr
-//            from Category c
-//            inner join Brand  b
-//            on b.id =c.brand.id
-//            inner join User  u
-//            on u.id=b.user.id
-//            where c.parentCategory.id is null
-//                  and
-//                  u.externalUserId=:brandId
-//            """)
-//    Object[] findAllParentCategories(String brandId,String parentCategoryName);
 
 
 }

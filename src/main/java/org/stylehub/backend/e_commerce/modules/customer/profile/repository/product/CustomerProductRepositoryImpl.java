@@ -10,13 +10,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
+import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.CustomerShowProductDetailsDto;
 import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.FindAllProductFilterRequestDto;
 import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.FindAllProductFilterResponseDto;
+import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.ProductColorOptionDto;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.SizeDtoReqRes;
+import org.stylehub.backend.e_commerce.platform.media.entity.ProductItemImage;
 import org.stylehub.backend.e_commerce.product.entity.Product;
+import org.stylehub.backend.e_commerce.product.product_item.entity.ProductItem;
+import org.stylehub.backend.e_commerce.product.product_item.size.Size;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
@@ -137,6 +144,61 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
         }
 
     }
+
+    @Override
+    public CustomerShowProductDetailsDto showProductDetails(String brandId, UUID productId, UUID itemId) {
+        try (EntityManager em = getEntityManager()) {
+
+            String hql = "SELECT DISTINCT p,pit FROM Product p " +
+                    "JOIN FETCH p.productItems pi " +
+                    "inner JOIN ProductItemImage pit" +
+                    "on pi.id=pit.productItem.id" +
+                    "LEFT JOIN FETCH pi.sizeList " +
+                    "WHERE p.id = :productId " +
+                    "AND p.brand.user.externalUserId = :brandId";
+
+            if (itemId != null) {
+                hql += " AND pi.id = :itemId ";
+            }
+
+            var query = em.createQuery(hql, Product.class)
+                    .setParameter("productId", productId)
+                    .setParameter("brandId", brandId);
+
+            if (itemId != null) {
+                query.setParameter("itemId", itemId);
+            }
+
+            Product product = query.getSingleResult();
+
+            List<ProductColorOptionDto> colorOptions = product.getProductItems().stream()
+                    .map(item -> new ProductColorOptionDto(
+                            item.getId(),
+                            item.getColorCode(),
+                            item.getProductItemImages()
+                                    .stream()
+                                    .map(ProductItemImage::getImageUrl)
+                                    .toList(),
+                            item.getSizeList()
+                                    .stream()
+                                    .map(s -> new SizeDtoReqRes(s.getId(), s.getSizeName(), s.getStock()))
+                                    .toList()
+                    ))
+                    .toList();
+
+            return new CustomerShowProductDetailsDto(
+                    product.getId(),
+                    product.getProductNameAr(),
+                    product.getProductNameEn(),
+                    product.getProductDescriptionEn(),
+                    product.getProductDescriptionAr(),
+                    product.getPrice(),
+                    product.getThumbnail(),
+                    colorOptions
+            );
+        }
+    }
+
 
     private EntityManager getEntityManager() {
         return this.entityManagerFactory.createEntityManager();

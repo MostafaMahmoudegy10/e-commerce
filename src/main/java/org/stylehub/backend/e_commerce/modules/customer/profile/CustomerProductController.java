@@ -6,6 +6,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.CustomerShowProductDetailsDto;
 import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.FindAllProductFilterRequestDto;
 import org.stylehub.backend.e_commerce.modules.customer.profile.service.CustomerProductService;
 
@@ -26,4 +27,16 @@ public class CustomerProductController {
     ) {
         return ResponseEntity.ok(this.customerProductService.findAllProductWithFilter(dtoRequest,pageable,brandId));
     }
+    @GetMapping("/{productId}")
+    public ResponseEntity<CustomerShowProductDetailsDto>showProductDetails(
+            @PathVariable("brandId") UUID brandId,
+            @PathVariable("productId") UUID productId,
+            @RequestParam(name ="itemId",required = false) UUID itemId
+    ){
+      return ResponseEntity.ok(this.customerProductService.showProductDetails(String.valueOf(brandId),
+                productId,
+                itemId
+                ));
+    }
+
 }
