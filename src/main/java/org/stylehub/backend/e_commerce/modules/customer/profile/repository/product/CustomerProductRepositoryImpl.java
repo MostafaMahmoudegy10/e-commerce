@@ -16,13 +16,12 @@ import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.Find
 import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.FindAllProductFilterResponseDto;
 import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.ProductColorOptionDto;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.SizeDtoReqRes;
-import org.stylehub.backend.e_commerce.platform.media.entity.ProductItemImage;
 import org.stylehub.backend.e_commerce.product.entity.Product;
-import org.stylehub.backend.e_commerce.product.product_item.entity.ProductItem;
-import org.stylehub.backend.e_commerce.product.product_item.size.Size;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -149,47 +148,92 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
     @Override
     public CustomerShowProductDetailsDto showProductDetails(String brandId, UUID productId, UUID itemId) {
         try (EntityManager em = getEntityManager()) {
-
-            StringBuilder hql1 = new StringBuilder(
-                    "SELECT DISTINCT p FROM Product p " +
-                            "JOIN FETCH p.productItems pi " +
-                            "WHERE p.id = :productId " +
-                            "AND p.brand.user.externalUserId = :brandId"
-            );
-
-            if (itemId != null) {
-                hql1.append(" AND pi.id = :itemId");
-            }
-
-            var query1 = em.createQuery(hql1.toString(), Product.class)
+            Product product = em.createQuery(
+                            "SELECT p FROM Product p " +
+                                    "WHERE p.id = :productId " +
+                                    "AND p.brand.user.externalUserId = :brandId",
+                            Product.class)
                     .setParameter("productId", productId)
-                    .setParameter("brandId", brandId);
+                    .setParameter("brandId", brandId)
+                    .getSingleResult();
 
+            StringBuilder productItemsQueryBuilder = new StringBuilder(
+                    "SELECT pi.id, pi.colorCode FROM ProductItem pi " +
+                            "WHERE pi.product.id = :productId"
+            );
             if (itemId != null) {
-                query1.setParameter("itemId", itemId);
+                productItemsQueryBuilder.append(" AND pi.id = :itemId");
             }
 
-            Product product = query1.getSingleResult();
+            var productItemsQuery = em.createQuery(productItemsQueryBuilder.toString(), Object[].class)
+                    .setParameter("productId", productId);
+            if (itemId != null) {
+                productItemsQuery.setParameter("itemId", itemId);
+            }
 
+            List<Object[]> itemRows = productItemsQuery.getResultList();
+            if (itemRows.isEmpty()) {
+                return new CustomerShowProductDetailsDto(
+                        product.getId(),
+                        product.getProductNameAr(),
+                        product.getProductNameEn(),
+                        product.getProductDescriptionEn(),
+                        product.getProductDescriptionAr(),
+                        product.getPrice(),
+                        product.getThumbnail(),
+                        List.of()
+                );
+            }
 
-            em.createQuery(
-                            "SELECT pi FROM ProductItem pi " +
-                                    "LEFT JOIN FETCH pi.productItemImages " +
-                                    "LEFT JOIN FETCH pi.sizeList " +
-                                    "WHERE pi.product = :product", ProductItem.class)
-                    .setParameter("product", product)
+            Map<UUID, ProductColorOptionBuilder> itemOptions = new LinkedHashMap<>();
+            for (Object[] itemRow : itemRows) {
+                UUID productItemId = (UUID) itemRow[0];
+                String colorCode = (String) itemRow[1];
+                itemOptions.put(productItemId, new ProductColorOptionBuilder(productItemId, colorCode));
+            }
+
+            List<UUID> productItemIds = new ArrayList<>(itemOptions.keySet());
+
+            List<Object[]> imageRows = em.createQuery(
+                            "SELECT pii.productItem.id, pii.imageUrl " +
+                                    "FROM ProductItemImage pii " +
+                                    "WHERE pii.productItem.id IN :productItemIds",
+                            Object[].class)
+                    .setParameter("productItemIds", productItemIds)
                     .getResultList();
 
-            // 3. التحويل لـ DTO
-            List<ProductColorOptionDto> colorOptions = product.getProductItems().stream()
-                    .map(item -> new ProductColorOptionDto(
-                            item.getId(),
-                            item.getColorCode(),
-                            item.getProductItemImages().stream()
-                                    .map(ProductItemImage::getImageUrl).toList(),
-                            item.getSizeList().stream()
-                                    .map(s -> new SizeDtoReqRes(s.getId(), s.getSizeName(), s.getStock())).toList()
-                    )).toList();
+            for (Object[] imageRow : imageRows) {
+                UUID productItemId = (UUID) imageRow[0];
+                String imageUrl = (String) imageRow[1];
+                ProductColorOptionBuilder builder = itemOptions.get(productItemId);
+                if (builder != null) {
+                    builder.images().add(imageUrl);
+                }
+            }
+
+            List<Object[]> sizeRows = em.createQuery(
+                            "SELECT s.productItem.id, s.id, s.sizeName, s.stock " +
+                                    "FROM Size s " +
+                                    "WHERE s.productItem.id IN :productItemIds",
+                            Object[].class)
+                    .setParameter("productItemIds", productItemIds)
+                    .getResultList();
+
+            for (Object[] sizeRow : sizeRows) {
+                UUID productItemId = (UUID) sizeRow[0];
+                UUID sizeId = (UUID) sizeRow[1];
+                String sizeName = (String) sizeRow[2];
+                Integer stock = (Integer) sizeRow[3];
+                ProductColorOptionBuilder builder = itemOptions.get(productItemId);
+                if (builder != null) {
+                    builder.sizes().add(new SizeDtoReqRes(sizeId, sizeName, stock));
+                }
+            }
+
+            List<ProductColorOptionDto> colorOptions = itemOptions.values()
+                    .stream()
+                    .map(ProductColorOptionBuilder::build)
+                    .toList();
 
             return new CustomerShowProductDetailsDto(
                     product.getId(),
@@ -204,6 +248,21 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
         } catch (NoResultException e) {
             logger.error("No product found for id: {}", productId);
             return null;
+        }
+    }
+
+    private record ProductColorOptionBuilder(
+            UUID itemId,
+            String colorCode,
+            List<String> images,
+            List<SizeDtoReqRes> sizes
+    ) {
+        private ProductColorOptionBuilder(UUID itemId, String colorCode) {
+            this(itemId, colorCode, new ArrayList<>(), new ArrayList<>());
+        }
+
+        private ProductColorOptionDto build() {
+            return new ProductColorOptionDto(itemId, colorCode, List.copyOf(images), List.copyOf(sizes));
         }
     }
 
