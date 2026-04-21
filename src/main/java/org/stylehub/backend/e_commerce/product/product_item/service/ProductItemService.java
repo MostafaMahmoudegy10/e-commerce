@@ -132,8 +132,7 @@ public class ProductItemService {
                         newSize.setSizeName(requestedSize.sizeName());
                         newSize.setStock(Optional.ofNullable(requestedSize.stock()).orElse(0));
                         newSize.setProductItem(item);
-                        Size savedNewSize = sizeRepo.save(newSize);
-                        item.getSizeList().add(savedNewSize);
+                        item.getSizeList().add(newSize);
                     }
             );
         }
