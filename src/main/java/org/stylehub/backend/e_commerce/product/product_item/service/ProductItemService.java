@@ -102,7 +102,7 @@ public class ProductItemService {
         return productItemRepository.findByIdAndProduct_IdAndProduct_Brand_User_ExternalUserId(productItemId,productId, brandId)
                 .orElseThrow(() -> new IllegalArgumentException("Product Item Not Found For This Brand !"));
     }
-    private void safelyDeleteIagesOfProductItem(List<ProductItemImage> productItemImages) {
+    private void safelyDeleteIagesOfProductItem(Set<ProductItemImage> productItemImages) {
         productItemImages.forEach(image -> {
             this.imageService.deleteImage(image.getPublicId());
         });

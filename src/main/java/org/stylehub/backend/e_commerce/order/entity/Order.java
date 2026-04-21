@@ -11,7 +11,7 @@ import org.stylehub.backend.e_commerce.user.entity.User;
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -41,5 +41,5 @@ public class Order {
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE},
     mappedBy = "order")
-    private List<OrderItem> orderItems;
+    private Set<OrderItem> orderItems;
 }

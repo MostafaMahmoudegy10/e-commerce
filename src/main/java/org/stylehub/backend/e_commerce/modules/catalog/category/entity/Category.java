@@ -7,7 +7,7 @@ import lombok.Setter;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -47,7 +47,7 @@ public class Category {
     private String publicId;
 
     @OneToMany(mappedBy = "parentCategory")
-    private List<Category> subCategory;
+    private Set<Category> subCategory;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")
