@@ -16,7 +16,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = {"product", "productItemImages", "sizeList"})
 public class ProductItem {
 
     @Id
