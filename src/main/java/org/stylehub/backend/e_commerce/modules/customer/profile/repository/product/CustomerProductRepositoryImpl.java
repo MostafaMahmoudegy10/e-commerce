@@ -2,6 +2,7 @@ package org.stylehub.backend.e_commerce.modules.customer.profile.repository.prod
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
@@ -149,42 +150,46 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
     public CustomerShowProductDetailsDto showProductDetails(String brandId, UUID productId, UUID itemId) {
         try (EntityManager em = getEntityManager()) {
 
-            String hql = "SELECT DISTINCT p,pit FROM Product p " +
-                    "JOIN FETCH p.productItems pi " +
-                    "inner JOIN ProductItemImage pit" +
-                    "on pi.id=pit.productItem.id" +
-                    "LEFT JOIN FETCH pi.sizeList " +
-                    "WHERE p.id = :productId " +
-                    "AND p.brand.user.externalUserId = :brandId";
+            StringBuilder hql1 = new StringBuilder(
+                    "SELECT DISTINCT p FROM Product p " +
+                            "JOIN FETCH p.productItems pi " +
+                            "WHERE p.id = :productId " +
+                            "AND p.brand.user.externalUserId = :brandId"
+            );
 
             if (itemId != null) {
-                hql += " AND pi.id = :itemId ";
+                hql1.append(" AND pi.id = :itemId");
             }
 
-            var query = em.createQuery(hql, Product.class)
+            var query1 = em.createQuery(hql1.toString(), Product.class)
                     .setParameter("productId", productId)
                     .setParameter("brandId", brandId);
 
             if (itemId != null) {
-                query.setParameter("itemId", itemId);
+                query1.setParameter("itemId", itemId);
             }
 
-            Product product = query.getSingleResult();
+            Product product = query1.getSingleResult();
 
+
+            em.createQuery(
+                            "SELECT pi FROM ProductItem pi " +
+                                    "LEFT JOIN FETCH pi.productItemImages " +
+                                    "LEFT JOIN FETCH pi.sizeList " +
+                                    "WHERE pi.product = :product", ProductItem.class)
+                    .setParameter("product", product)
+                    .getResultList();
+
+            // 3. التحويل لـ DTO
             List<ProductColorOptionDto> colorOptions = product.getProductItems().stream()
                     .map(item -> new ProductColorOptionDto(
                             item.getId(),
                             item.getColorCode(),
-                            item.getProductItemImages()
-                                    .stream()
-                                    .map(ProductItemImage::getImageUrl)
-                                    .toList(),
-                            item.getSizeList()
-                                    .stream()
-                                    .map(s -> new SizeDtoReqRes(s.getId(), s.getSizeName(), s.getStock()))
-                                    .toList()
-                    ))
-                    .toList();
+                            item.getProductItemImages().stream()
+                                    .map(ProductItemImage::getImageUrl).toList(),
+                            item.getSizeList().stream()
+                                    .map(s -> new SizeDtoReqRes(s.getId(), s.getSizeName(), s.getStock())).toList()
+                    )).toList();
 
             return new CustomerShowProductDetailsDto(
                     product.getId(),
@@ -196,9 +201,11 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
                     product.getThumbnail(),
                     colorOptions
             );
+        } catch (NoResultException e) {
+            logger.error("No product found for id: {}", productId);
+            return null;
         }
     }
-
 
     private EntityManager getEntityManager() {
         return this.entityManagerFactory.createEntityManager();
