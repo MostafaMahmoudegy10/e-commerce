@@ -13,4 +13,10 @@ public interface SizeRepo extends JpaRepository<Size, UUID> {
             UUID productItemId,
             String externalUserId
     );
+
+    Optional<Size> findBySizeNameAndProductItem_IdAndProductItem_Product_Brand_User_ExternalUserId(
+            String sizeName,
+            UUID productItemId,
+            String externalUserId
+    );
 }

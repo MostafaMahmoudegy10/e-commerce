@@ -30,10 +30,20 @@ public class Size {
     private ProductItem productItem;
 
     public void addToStock(Integer stock) {
+        ensureStockInitialized();
         this.stock += stock;
     }
 
     public  void removeFromStock(Integer stock) {
+        ensureStockInitialized();
         this.stock -= stock;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void ensureStockInitialized() {
+        if (this.stock == null) {
+            this.stock = 0;
+        }
     }
 }
