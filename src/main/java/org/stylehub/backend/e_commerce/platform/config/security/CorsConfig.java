@@ -1,4 +1,4 @@
-package org.stylehub.backend.e_commerce.platform.config;
+package org.stylehub.backend.e_commerce.platform.config.security;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

@@ -3,7 +3,6 @@ package org.stylehub.backend.e_commerce.user.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.user.entity.User;
 import org.stylehub.backend.e_commerce.user.entity.enums.Role;
 import org.stylehub.backend.e_commerce.user.repository.UserRepository;
@@ -15,20 +14,24 @@ public class UserSyncService {
     private final UserRepository userRepository;
 
     @Transactional
-    public User create(CurrentUserProvider currentUserProvider) {
+    public User create(String externalId,String role) {
 
-        if (this.userRepository.existsByExternalUserId(currentUserProvider.externalId())) {
+        if (this.userRepository.existsByExternalUserId(externalId)) {
             throw new IllegalArgumentException("User already exists");
         }
 
         User newUser = new User();
-        newUser.setExternalUserId(currentUserProvider.externalId());
-        newUser.setEmail(currentUserProvider.getEmail());
-        newUser.setRole(Role.valueOf(
-                currentUserProvider.getRoles().stream().findFirst().orElse("CUSTOMER")
-        ));
-        newUser.setIsProfileCompleted(true);
+        newUser.setExternalUserId(externalId);
+        newUser.setEmail(externalId);
+        if(role.equals("CUSTOMER")){
+            newUser.setRole(Role.CUSTOMER);
+        }else if(role.equals("BRAND_OWNER")){
+            newUser.setRole(Role.BRAND_OWNER);
+        }else{
+            throw new IllegalArgumentException("Invalid role");
+        }
 
+        newUser.setIsProfileCompleted(true);
         return this.userRepository.save(newUser);
     }
 

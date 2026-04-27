@@ -1,4 +1,4 @@
-package org.stylehub.backend.e_commerce.platform.config;
+package org.stylehub.backend.e_commerce.platform.config.file_storage;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;

@@ -1,4 +1,4 @@
-package org.stylehub.backend.e_commerce.platform.config;
+package org.stylehub.backend.e_commerce.platform.config.migration;
 
 import org.springframework.boot.flyway.autoconfigure.FlywayMigrationStrategy;
 import org.springframework.context.annotation.Bean;

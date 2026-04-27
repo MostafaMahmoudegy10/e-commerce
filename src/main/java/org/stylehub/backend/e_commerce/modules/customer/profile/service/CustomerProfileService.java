@@ -2,16 +2,14 @@ package org.stylehub.backend.e_commerce.modules.customer.profile.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.modules.customer.profile.dto.CustomerProfileSetupRequest;
 import org.stylehub.backend.e_commerce.modules.customer.profile.entity.CustomerProfile;
 import org.stylehub.backend.e_commerce.modules.customer.profile.repository.CustomerProfileRepository;
-import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.user.entity.User;
 import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 import org.stylehub.backend.e_commerce.user.service.UserSyncService;
-
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -19,62 +17,39 @@ public class CustomerProfileService {
 
     private final CustomerProfileRepository customerProfileRepository;
     private final UserSyncService userSyncService;
-    private final CurrentUserProvider currentUserProvider;
 
     @Transactional
-    public Map<String, Object> setupProfile(CustomerProfileSetupRequest request) {
+    @RabbitListener(queues = "customer.created.user.service.q")
+    public void setupProfile(CustomerProfileSetupRequest request) {
         validateRequest(request);
 
-        User user = userSyncService.create(currentUserProvider);
+        User user = userSyncService.create(request.userId(),"CUSTOMER");
 
-        if (customerProfileRepository.existsByUsernameAndUser_ExternalUserIdNot(request.userName(), currentUserProvider.externalId())) {
+        if (customerProfileRepository.existsByUsernameAndUser_ExternalUserIdNot(request.username(),
+                request.userId())) {
             throw new IllegalArgumentException("Username is already taken.");
         }
 
         CustomerProfile profile = customerProfileRepository
-                .findByUser_ExternalUserId(currentUserProvider.externalId())
+                .findByUser_ExternalUserId(request.userId())
                 .orElseGet(CustomerProfile::new);
 
         profile.setUser(user);
-        profile.setUsername(request.userName());
+        profile.setUsername(request.username());
         profile.setFirstName(request.firstName());
         profile.setLastName(request.lastName());
         profile.setPhoneNumber(request.phoneNumber());
-        profile.setBio(request.bio());
-        profile.setGender(Gender.fromCode(request.gender()));
-        profile.setProfileImageUrl(request.profileImageUrl());
+        profile.setBio("no bio");
+        profile.setGender(Gender.fromCode('M'));
+        profile.setProfileImageUrl("image.jpg");
 
-        CustomerProfile savedProfile = customerProfileRepository.save(profile);
+        customerProfileRepository.save(profile);
 
-        user.setIsProfileCompleted(true);
 
-        return Map.of(
-                "message", "Customer profile saved successfully.",
-                "profileId", savedProfile.getId(),
-                "username", savedProfile.getUsername()
-        );
     }
 
-
-
-    @Transactional
-    public Map<String, Object> viewProfile() {
-        CustomerProfile profile = customerProfileRepository
-                .findByUser_ExternalUserId(currentUserProvider.externalId())
-                .orElseThrow(() -> new IllegalArgumentException("Customer profile not found."));
-
-        return Map.of(
-                "username", profile.getUsername(),
-                "firstName", profile.getFirstName(),
-                "lastName", profile.getLastName(),
-                "phoneNumber", profile.getPhoneNumber(),
-                "bio", profile.getBio(),
-                "gender", profile.getGender(),
-                "profileImageUrl", profile.getProfileImageUrl()
-        );
-    }
     private void validateRequest(CustomerProfileSetupRequest request) {
-        if (isBlank(request.userName())) {
+        if (isBlank(request.username())) {
             throw new IllegalArgumentException("Username is required.");
         }
         if (isBlank(request.firstName())) {
@@ -86,12 +61,12 @@ public class CustomerProfileService {
         if (isBlank(request.phoneNumber())) {
             throw new IllegalArgumentException("Phone number is required.");
         }
-        if (request.gender() == null) {
-            throw new IllegalArgumentException("Gender is required.");
-        }
+
     }
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
     }
+
+
 }

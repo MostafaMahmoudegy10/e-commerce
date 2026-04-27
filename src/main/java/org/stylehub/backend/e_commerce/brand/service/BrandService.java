@@ -2,15 +2,13 @@ package org.stylehub.backend.e_commerce.brand.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.brand.dto.BrandCreationRequest;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.repository.BrandRepository;
-import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.user.entity.User;
 import org.stylehub.backend.e_commerce.user.service.UserSyncService;
-
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -18,46 +16,46 @@ public class BrandService {
 
     private final BrandRepository brandRepository;
     private final UserSyncService userSyncService;
-    private final CurrentUserProvider currentUserProvider;
+
 
     @Transactional
-    public Map<String, Object> setupBrand(BrandCreationRequest brandCreationRequest) {
+    @RabbitListener(queues = "brand.created.user.service.q")
+    public void setupBrand(BrandCreationRequest brandCreationRequest) {
         validateBrandCreationRequest(brandCreationRequest);
 
-        User user = userSyncService.create(currentUserProvider);
-
-        brandRepository.findByUser_ExternalUserId(currentUserProvider.externalId())
+        brandRepository.findByUser_ExternalUserId(brandCreationRequest.brandId())
                 .ifPresent(brand -> {
                     throw new IllegalArgumentException("Brand profile already exists for this user.");
                 });
 
+        User user = userSyncService.create(brandCreationRequest.brandId(),"BRAND_OWNER");
+
         Brand brand = new Brand();
         brand.setBrandName(brandCreationRequest.brandName());
-        brand.setBrandEmail(currentUserProvider.getEmail());
-        brand.setBrandImageUrl(brandCreationRequest.profileImageUrl());
+        brand.setBrandEmail(user.getEmail());
         brand.setDescription(brandCreationRequest.bio());
+        brand.setBrandImageUrl(brandCreationRequest.websiteUrl());
         brand.setUser(user);
 
-        Brand savedBrand = brandRepository.save(brand);
+      brandRepository.save(brand);
 
-        return Map.of(
-                "message", "Brand profile created successfully.",
-                "brandEmail", savedBrand.getBrandEmail()
-        );
     }
 
     private void validateBrandCreationRequest(BrandCreationRequest brandCreationRequest) {
         if (brandCreationRequest.brandName() == null) {
             throw new IllegalArgumentException("Brand name is required.");
         }
-        if (brandCreationRequest.phoneNumber() == null) {
-            throw new IllegalArgumentException("Phone number is required.");
+        if (brandCreationRequest.brandId() == null) {
+            throw new IllegalArgumentException("BrandId number is required.");
         }
         if (brandCreationRequest.bio() == null) {
             throw new IllegalArgumentException("Bio is required.");
         }
-        if (brandCreationRequest.profileImageUrl() == null) {
-            throw new IllegalArgumentException("Profile image URL is required.");
+        if (brandCreationRequest.websiteUrl() == null) {
+            throw new IllegalArgumentException("Website URL is required.");
+        }
+        if (brandCreationRequest.brandName() == null) {
+            throw new IllegalArgumentException("brandName is required.");
         }
     }
 
@@ -70,4 +68,6 @@ public class BrandService {
         }
         return true;
     }
+
+
 }
