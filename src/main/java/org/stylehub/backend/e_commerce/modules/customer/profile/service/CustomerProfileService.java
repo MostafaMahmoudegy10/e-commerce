@@ -23,7 +23,7 @@ public class CustomerProfileService {
     public void setupProfile(CustomerProfileSetupRequest request) {
         validateRequest(request);
 
-        User user = userSyncService.create(request.userId(),"CUSTOMER");
+        User user = userSyncService.create(request.userId(),"CUSTOMER",request.email());
 
         if (customerProfileRepository.existsByUsernameAndUser_ExternalUserIdNot(request.username(),
                 request.userId())) {

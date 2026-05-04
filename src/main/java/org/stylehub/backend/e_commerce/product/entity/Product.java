@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
-import org.stylehub.backend.e_commerce.product.product_item.entity.ProductItem;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -16,7 +15,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@EqualsAndHashCode(exclude = {"brand", "category", "productItems"})
+@EqualsAndHashCode(exclude = {"brand", "category"})
 public class Product {
 
     @Id
@@ -52,9 +51,5 @@ public class Product {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id",nullable = false)
     private Category category;
-
-    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE,CascadeType.REMOVE})
-    private Set<ProductItem>  productItems=new HashSet<>();
 
 }

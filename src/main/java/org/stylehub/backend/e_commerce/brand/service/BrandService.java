@@ -28,7 +28,7 @@ public class BrandService {
                     throw new IllegalArgumentException("Brand profile already exists for this user.");
                 });
 
-        User user = userSyncService.create(brandCreationRequest.brandId(),"BRAND_OWNER");
+        User user = userSyncService.create(brandCreationRequest.brandId(),"BRAND_OWNER",brandCreationRequest.email());
 
         Brand brand = new Brand();
         brand.setBrandName(brandCreationRequest.brandName());

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.brand.service.BrandService;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
-import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.dto.ProductPatchRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.ProductPatchRequest;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
@@ -161,7 +161,7 @@ public class ProductService {
         }
     }
 
-    private Product findProductForBrand(UUID productId, String brandId) {
+    public Product findProductForBrand(UUID productId, String brandId) {
         return this.productRepository.findProductByIdAndBrand_User_ExternalUserId(productId, brandId)
                 .orElseThrow(() -> new IllegalArgumentException("""
                         product You Requested Not Present For Your Brand Please Add It First And Try Again

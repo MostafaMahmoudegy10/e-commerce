@@ -2,7 +2,6 @@ package org.stylehub.backend.e_commerce.product.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.stylehub.backend.e_commerce.modules.customer.profile.dto.product.CustomerShowProductDetailsDto;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 
 import java.util.Optional;

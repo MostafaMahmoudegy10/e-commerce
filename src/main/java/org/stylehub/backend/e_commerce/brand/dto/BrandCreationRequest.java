@@ -5,6 +5,7 @@ public record BrandCreationRequest(
         String brandName,
         String username,
         String bio,
-        String websiteUrl
+        String websiteUrl,
+        String email
 ) {
 }

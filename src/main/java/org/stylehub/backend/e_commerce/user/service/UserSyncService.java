@@ -14,7 +14,7 @@ public class UserSyncService {
     private final UserRepository userRepository;
 
     @Transactional
-    public User create(String externalId,String role) {
+    public User create(String externalId,String role,String email) {
 
         if (this.userRepository.existsByExternalUserId(externalId)) {
             throw new IllegalArgumentException("User already exists");
@@ -22,7 +22,7 @@ public class UserSyncService {
 
         User newUser = new User();
         newUser.setExternalUserId(externalId);
-        newUser.setEmail(externalId);
+        newUser.setEmail(email);
         if(role.equals("CUSTOMER")){
             newUser.setRole(Role.CUSTOMER);
         }else if(role.equals("BRAND_OWNER")){
