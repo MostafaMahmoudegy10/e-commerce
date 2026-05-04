@@ -5,14 +5,18 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.ProductColorCreationRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.ProductColorDeleteResponse;
 import org.stylehub.backend.e_commerce.platform.media.ProductColorImagesRepo;
 import org.stylehub.backend.e_commerce.platform.media.entity.ProductColorImages;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
 import org.stylehub.backend.e_commerce.product.color.repository.ProductColorRepository;
+import org.stylehub.backend.e_commerce.product.color.variant.repository.ProductVariantRepository;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.product.service.ProductService;
 
@@ -31,20 +35,17 @@ public class ProductColorService {
     private final static Logger LOGGER = LoggerFactory.getLogger(ProductColorService.class);
     private final ImageService imageService;
     private final ProductColorImagesRepo productColorImagesRepo;
+    private final ProductVariantRepository productVariantRepository;
 
 
     @Transactional
     public Object upsertNewProductColor(ProductColorCreationRequest productColorCreationRequest,UUID productId) {
         LOGGER.info("Starting Process of adding new product color to productId={}", productId);
 
-        // validate the request dto
         validateProductColorCreationRequest(productColorCreationRequest);
-
-        //check product is existing for this brand or not
         Product product= this.productService.findProductForBrand(productId,currentUserProvider.externalId());
         LOGGER.info("The ProductId={} you want to add colors to it is exists in the brandId={}", productId,currentUserProvider.externalId());
 
-        //check if this color for this product is exits before or not
         Optional<ProductColor> optionalProductColor =this.productColorRepository.findProductColorByIdAndColorCode(productId,productColorCreationRequest.colorCode());
         if (optionalProductColor.isPresent()){
             LOGGER.info("the color is exits for the productId={} now we update it with the new info..", productId);
@@ -72,6 +73,44 @@ public class ProductColorService {
 
     }
 
+    @Transactional
+    public ProductColorDeleteResponse deleteProductColor(UUID productId, UUID colorId) {
+        String brandExternalUserId = currentUserProvider.externalId();
+        LOGGER.info("Color deletion started for productId={}, colorId={}, brand={}", productId, colorId, brandExternalUserId);
+
+        productService.findProductById(productId, brandExternalUserId);
+        ProductColor productColor = findProductColorByIdAndProductIdAndBrandExternalUserId(
+                colorId,
+                productId,
+                brandExternalUserId
+        );
+
+        List<ProductColorImages> colorImages = productColorImagesRepo.findAllByProductColor_Id(colorId);
+        List<String> publicIds = colorImages.stream().map(ProductColorImages::getPublicId).toList();
+
+        int variantCount = productVariantRepository.findAllByProductColor_Id(colorId).size();
+        productVariantRepository.deleteAllByProductColor_Id(colorId);
+        LOGGER.info("Deleted variants for colorId={}, count={}", colorId, variantCount);
+
+        productColorImagesRepo.deleteAllByProductColor_Id(colorId);
+        LOGGER.info("Deleted image records from DB for colorId={}, count={}", colorId, colorImages.size());
+
+        productColorRepository.delete(productColor);
+
+        if (TransactionSynchronizationManager.isSynchronizationActive() && !publicIds.isEmpty()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    publicIds.forEach(publicId -> {
+                        imageService.deleteImage(publicId);
+                        LOGGER.info("Cloudinary image deletion after commit for colorId={}, publicId={}", colorId, publicId);
+                    });
+                }
+            });
+        }
+
+        return new ProductColorDeleteResponse("Product color deleted successfully", productId, colorId);
+    }
 
     public ProductColor findProductColorByIdAndProductIdAndBrandExternalUserId(UUID id, UUID productId, String brandUserExternalUserId) {
         return this.productColorRepository.findProductColorByIdAndProduct_IdAndProduct_Brand_User_ExternalUserId(id, productId, brandUserExternalUserId)
