@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantCreationRequest;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantCreationResponse;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantStockUpdateRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantStockUpdateResponse;
 import org.stylehub.backend.e_commerce.product.color.variant.service.ProductVariantService;
 
 import java.util.UUID;
@@ -26,5 +28,15 @@ public class BrandOwnerProductVariantController {
             @PathVariable("colorId") UUID colorId
     ){
         return ResponseEntity.ok(this.productVariantService.upsertVariant(productVariantCreationRequest,productId,colorId));
+    }
+
+    @PatchMapping("/{variantId}/stock")
+    public ResponseEntity<ProductVariantStockUpdateResponse> patchVariantStock(
+            @PathVariable UUID productId,
+            @PathVariable UUID colorId,
+            @PathVariable UUID variantId,
+            @RequestBody ProductVariantStockUpdateRequest request
+    ) {
+        return ResponseEntity.ok(productVariantService.patchVariantStock(productId, colorId, variantId, request));
     }
 }

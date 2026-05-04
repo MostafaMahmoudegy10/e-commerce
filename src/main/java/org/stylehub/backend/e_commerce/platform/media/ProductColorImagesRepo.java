@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface ProductColorImagesRepo extends JpaRepository<ProductColorImages, UUID> {
 
     List<ProductColorImages> findAllByProductColor_Id(UUID productColorId);
+
+    void deleteAllByProductColor_Id(UUID productColorId);
 }

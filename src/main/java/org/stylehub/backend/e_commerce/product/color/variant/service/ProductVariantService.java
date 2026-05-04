@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantCreationRequest;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantCreationResponse;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantStockUpdateRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantStockUpdateResponse;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
 import org.stylehub.backend.e_commerce.product.color.service.ProductColorService;
@@ -73,6 +75,62 @@ public class ProductVariantService {
         }
 
         return updateVariant(request, existingVariant);
+    }
+
+    @Transactional
+    public ProductVariantStockUpdateResponse patchVariantStock(
+            UUID productId,
+            UUID colorId,
+            UUID variantId,
+            ProductVariantStockUpdateRequest request
+    ) {
+        LOGGER.info(
+                "Stock update started for productId={}, colorId={}, variantId={}",
+                productId,
+                colorId,
+                variantId
+        );
+
+        validateStockUpdateRequest(request);
+
+        String brandExternalUserId = currentUserProvider.externalId();
+        productService.findProductById(productId, brandExternalUserId);
+        ProductColor productColor = productColorService
+                .findProductColorByIdAndProductIdAndBrandExternalUserId(
+                        colorId,
+                        productId,
+                        brandExternalUserId
+                );
+
+        ProductVariant variant = productVariantRepository
+                .findByIdAndProductColor_Id(variantId, productColor.getId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        String.format(
+                                "ProductVariant not found with id=%s for colorId=%s",
+                                variantId,
+                                colorId
+                        )
+                ));
+
+        variant.setStock(request.stock());
+        ProductVariant savedVariant = productVariantRepository.save(variant);
+
+        LOGGER.info(
+                "Stock update completed for variantId={}, newStock={}",
+                savedVariant.getId(),
+                savedVariant.getStock()
+        );
+
+        return new ProductVariantStockUpdateResponse(
+                savedVariant.getId(),
+                productId,
+                colorId,
+                savedVariant.getProductColor().getColorCode(),
+                savedVariant.getSize(),
+                savedVariant.getSku(),
+                savedVariant.getStock(),
+                savedVariant.getPriceOverride()
+        );
     }
 
     private ProductVariantCreationResponse createVariant(
@@ -151,6 +209,15 @@ public class ProductVariantService {
 
         if (request.price().signum() < 0) {
             throw new IllegalArgumentException("Price cannot be negative");
+        }
+    }
+
+    private void validateStockUpdateRequest(ProductVariantStockUpdateRequest request) {
+        if (request == null || request.stock() == null) {
+            throw new IllegalArgumentException("Stock is required");
+        }
+        if (request.stock() < 0) {
+            throw new IllegalArgumentException("Stock cannot be negative");
         }
     }
 
