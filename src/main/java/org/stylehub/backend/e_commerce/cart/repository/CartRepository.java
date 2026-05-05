@@ -10,15 +10,5 @@ import java.util.UUID;
 
 public interface CartRepository extends JpaRepository<Cart, UUID> {
 
-    @Query("""
-    select c
-    from Cart c
-    join c.customer cp
-    join cp.user u
-    where u.externalUserId = :externalUserId
-      and c.cartStatus = :status
-""")
-    Optional<Cart> findActiveCartByCustomerExternalUserId(
-            String externalUserId,
-            CartStatus status );
+    Optional<Cart> findCartByCartStatusAndCustomer_User_ExternalUserId(CartStatus cartStatus, String s);
 }
