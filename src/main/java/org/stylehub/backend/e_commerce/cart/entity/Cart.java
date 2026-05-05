@@ -6,8 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.stylehub.backend.e_commerce.modules.customer.profile.entity.CustomerProfile;
-import org.stylehub.backend.e_commerce.user.entity.User;
+import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
 
 import java.sql.Timestamp;
 import java.util.UUID;
