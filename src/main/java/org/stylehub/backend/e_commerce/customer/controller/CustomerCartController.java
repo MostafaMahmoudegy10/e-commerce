@@ -1,4 +1,4 @@
-package org.stylehub.backend.e_commerce.modules.customer.controller;
+package org.stylehub.backend.e_commerce.customer.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
