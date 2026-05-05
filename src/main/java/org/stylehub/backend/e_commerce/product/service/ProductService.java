@@ -15,6 +15,7 @@ import org.stylehub.backend.e_commerce.product.dto.ProductCreationResponse;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.product.repository.ProductRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -47,7 +48,7 @@ public class ProductService {
                 category You Requested Not Present For Your Brand Please Add It First And Try Again
                 """));
 
-        UploadResponse image = imageService.uploadImage(request.thumbnail());
+        UploadResponse image = imageService.uploadImageAsync(request.thumbnail()).join();
 
         Product product = new Product();
         product.setThumbnail(image.imageUrl());
@@ -107,7 +108,7 @@ public class ProductService {
         }
         if (patchRequest.thumbnail() != null && !patchRequest.thumbnail().isEmpty()) {
             safelyDeleteProductThumbnail(product.getPublicId());
-            UploadResponse image = imageService.uploadImage(patchRequest.thumbnail());
+            UploadResponse image = imageService.uploadImageAsync(patchRequest.thumbnail()).join();
             product.setThumbnail(image.imageUrl());
             product.setPublicId(image.publicId());
         }
@@ -172,7 +173,7 @@ public class ProductService {
         if (publicId == null || publicId.isBlank()) {
             return;
         }
-        this.imageService.deleteImage(publicId);
+        this.imageService.deleteImageAsync(publicId);
     }
 
     private String getCurrentBrand() {

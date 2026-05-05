@@ -40,8 +40,5 @@ public class ProductVariant {
     @JoinColumn(name = "product_color_id",nullable = false)
     private ProductColor productColor;
 
-    public void resolveStock(Integer incomingStock) {
-            this.stock+=incomingStock-this.stock;
-    }
 
 }

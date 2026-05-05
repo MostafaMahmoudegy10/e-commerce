@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,4 +30,6 @@ public interface ProductColorRepository extends JpaRepository<ProductColor, UUID
                    pc.colorCode=:colorCode
         """)
     Optional<ProductColor> findProductColorByIdAndColorCode(UUID productId,String colorCode);
+
+    List<ProductColor> findAllByProduct_IdAndProduct_Brand_User_ExternalUserId(UUID productId, String brandId);
 }

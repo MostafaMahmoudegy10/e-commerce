@@ -20,6 +20,7 @@ import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 import org.stylehub.backend.e_commerce.user.repository.UserRepository;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -58,7 +59,7 @@ public class CategoryService {
                                     "For Your Brand Please Add It First And Try Again "));
         }
 
-        UploadResponse image = this.imageService.uploadImage(request.categoryIcon());
+        UploadResponse image = this.imageService.uploadImageAsync(request.categoryIcon()).join();
 
        Brand brand = this.brandRepository.findByUser_ExternalUserId(externalId).orElseThrow(
                 ()->new IllegalArgumentException("you need to complete yur profile"));
@@ -116,7 +117,7 @@ public class CategoryService {
         }
         if(patchRequest.imageIcon()!=null){
             safelyDeleteCategoryIcon(pathchedCategory.getPublicId());
-            UploadResponse image = this.imageService.uploadImage(patchRequest.imageIcon());
+            UploadResponse image = this.imageService.uploadImageAsync(patchRequest.imageIcon()).join();
             pathchedCategory.setImageUrl(image.imageUrl());
             pathchedCategory.setPublicId(image.publicId());
         }
@@ -143,7 +144,7 @@ public class CategoryService {
         if (publicId == null || publicId.isBlank()) {
             return;
         }
-        this.imageService.deleteImage(publicId);
+        this.imageService.deleteImageAsync(publicId);
     }
 
     private CategoryResponse toResponse(Category savedCategory) {

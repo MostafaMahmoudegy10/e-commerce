@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +53,7 @@ public class ProductColorService {
             ProductColor productColor=optionalProductColor.get();
             productColor.setColorCode(productColorCreationRequest.colorCode());
             replaceProductColorImages(productColor,productColorCreationRequest.colorImages());
-           var savedProductColor = this.productColorRepository.save(productColor);
+            var savedProductColor = this.productColorRepository.save(productColor);
             return new Object[]{
                     "productId : " + productId,
                     "productColorId : " + savedProductColor.getId(),
@@ -101,10 +102,8 @@ public class ProductColorService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    publicIds.forEach(publicId -> {
-                        imageService.deleteImage(publicId);
-                        LOGGER.info("Cloudinary image deletion after commit for colorId={}, publicId={}", colorId, publicId);
-                    });
+                    imageService.deleteImagesAsync(publicIds);
+                    LOGGER.info("Cloudinary image deletion scheduled after commit for colorId={}, count={}", colorId, publicIds.size());
                 }
             });
         }
@@ -131,57 +130,45 @@ public class ProductColorService {
         }
     }
 
-    private void replaceProductColorImages(
+    protected void replaceProductColorImages(
             ProductColor productColor,
             List<MultipartFile> multipartFiles
     ) {
-        deleteProductColorImages(productColor);
-        saveProductColorImages(productColor, multipartFiles);
-    }
-
-    private void deleteProductColorImages(ProductColor productColor) {
-        List<ProductColorImages> productColorImages =
+        List<ProductColorImages> oldImages =
                 productColorImagesRepo.findAllByProductColor_Id(productColor.getId());
 
-        if (productColorImages.isEmpty()) {
-            LOGGER.info("No images found for colorCode={}", productColor.getColorCode());
+        List<ProductColorImages> newImages = saveProductColorImages(productColor, multipartFiles);
+
+        if (oldImages.isEmpty()) {
+            LOGGER.info("No old images found to replace for colorCode={}", productColor.getColorCode());
             return;
         }
 
-        productColorImagesRepo.deleteAll(productColorImages);
-
+        productColorImagesRepo.deleteAll(oldImages);
         LOGGER.info(
-                "All old images deleted from database for colorCode={}",
-                productColor.getColorCode()
+                "Old image records replaced for colorCode={}, oldCount={}, newCount={}",
+                productColor.getColorCode(),
+                oldImages.size(),
+                newImages.size()
         );
 
-        productColorImages.forEach(productColorImage -> {
-            imageService.deleteImage(productColorImage.getPublicId());
-
-            LOGGER.info(
-                    "Image deleted from cloud for colorCode={}, publicId={}",
-                    productColor.getColorCode(),
-                    productColorImage.getPublicId()
-            );
-        });
-
-
+        scheduleImageDeletionAfterCommit(
+                oldImages.stream()
+                        .map(ProductColorImages::getPublicId)
+                        .toList(),
+                "colorCode=" + productColor.getColorCode()
+        );
     }
 
     private List<ProductColorImages> saveProductColorImages(
             ProductColor productColor,
             List<MultipartFile> multipartFiles
     ) {
+        List<UploadResult> uploadResults = uploadImagesInParallel(multipartFiles);
 
-        List<ProductColorImages> colorImages = multipartFiles.stream()
-                .map(imageService::uploadImage)
-                .map(uploadResponse -> {
-                    ProductColorImages colorImage = new ProductColorImages();
-                    colorImage.setProductColor(productColor);
-                    colorImage.setImageUrl(uploadResponse.imageUrl());
-                    colorImage.setPublicId(uploadResponse.publicId());
-                    return colorImage;
-                })
+        List<ProductColorImages> colorImages = uploadResults.stream()
+                .map(UploadResult::response)
+                .map(uploadResponse -> toProductColorImage(productColor, uploadResponse))
                 .toList();
 
         List<ProductColorImages> savedImages =
@@ -198,5 +185,75 @@ public class ProductColorService {
         return savedImages;
     }
 
+    private List<UploadResult> uploadImagesInParallel(List<MultipartFile> multipartFiles) {
+        List<CompletableFuture<UploadResult>> uploadFutures = multipartFiles.stream()
+                .map(file -> imageService.uploadImageAsync(file)
+                        .handle((response, throwable) -> new UploadResult(response, throwable)))
+                .toList();
 
+        CompletableFuture.allOf(uploadFutures.toArray(CompletableFuture[]::new)).join();
+
+        List<UploadResult> uploadResults = uploadFutures.stream()
+                .map(CompletableFuture::join)
+                .toList();
+
+        List<String> uploadedPublicIds = uploadResults.stream()
+                .map(UploadResult::response)
+                .filter(java.util.Objects::nonNull)
+                .map(uploadResponse -> uploadResponse.publicId())
+                .toList();
+
+        Optional<Throwable> firstFailure = uploadResults.stream()
+                .map(UploadResult::throwable)
+                .filter(java.util.Objects::nonNull)
+                .findFirst();
+
+        if (firstFailure.isPresent()) {
+            imageService.deleteImagesAsync(uploadedPublicIds).join();
+            throw new IllegalArgumentException("Failed to upload one or more product color images", firstFailure.get());
+        }
+
+        return uploadResults;
+    }
+
+    private ProductColorImages toProductColorImage(ProductColor productColor, org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse uploadResponse) {
+        ProductColorImages colorImage = new ProductColorImages();
+        colorImage.setProductColor(productColor);
+        colorImage.setImageUrl(uploadResponse.imageUrl());
+        colorImage.setPublicId(uploadResponse.publicId());
+        return colorImage;
+    }
+
+    private void scheduleImageDeletionAfterCommit(List<String> publicIds, String context) {
+        if (publicIds.isEmpty()) {
+            return;
+        }
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    imageService.deleteImagesAsync(publicIds);
+                    LOGGER.info("Scheduled async image deletion after commit for {}, count={}", context, publicIds.size());
+                }
+            });
+            return;
+        }
+
+        imageService.deleteImagesAsync(publicIds);
+        LOGGER.info("Scheduled async image deletion without transaction sync for {}, count={}", context, publicIds.size());
+    }
+
+    private record UploadResult(org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse response, Throwable throwable) {
+    }
+
+
+    public List<ProductColor> findAllProductColorsByProductIdAndBrandId(UUID productId, String brandId) {
+        return this.productColorRepository.findAllByProduct_IdAndProduct_Brand_User_ExternalUserId(productId,brandId);
+
+    }
+
+    public List<String> findAllColorImagesByColorId(UUID id) {
+        return this.productColorImagesRepo.findImageUrlsByProductColor_Id(id);
+    }
 }

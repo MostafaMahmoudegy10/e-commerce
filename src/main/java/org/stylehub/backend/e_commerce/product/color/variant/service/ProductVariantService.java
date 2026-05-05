@@ -17,6 +17,7 @@ import org.stylehub.backend.e_commerce.product.color.variant.repository.ProductV
 import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.product.service.ProductService;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -229,5 +230,12 @@ public class ProductVariantService {
                 variant.getStock(),
                 variant.getSize()
         );
+    }
+
+
+
+    public List<ProductVariant> findAllByProductId(UUID productId) {
+        return this.productVariantRepository.findAllByProductColor_Product_Id(productId);
+
     }
 }

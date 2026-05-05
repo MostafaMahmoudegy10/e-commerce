@@ -13,6 +13,7 @@ import org.stylehub.backend.e_commerce.customer.rating.product_rating_summary.re
 import org.stylehub.backend.e_commerce.product.entity.Product;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -82,5 +83,9 @@ public class ProductRatingSummaryService {
         );
 
         return savedProductSummary;
+    }
+
+    public BigDecimal getAvgRatingOfProduct(UUID productId) {
+        return this.productRatingSummaryRepository.findAvgRatingByProduct_Id(productId);
     }
 }

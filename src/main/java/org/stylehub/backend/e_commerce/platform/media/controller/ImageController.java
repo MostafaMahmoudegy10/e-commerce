@@ -7,6 +7,7 @@ import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @AllArgsConstructor
@@ -15,11 +16,11 @@ public class ImageController {
     private final ImageService imageService;
 
     @PostMapping(value = "api/v1/image/upload")
-    public UploadResponse uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
-        return this.imageService.uploadImage(file);
+    public CompletableFuture<UploadResponse> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
+        return this.imageService.uploadImageAsync(file);
     }
     @DeleteMapping(value = "api/v1/image/delete")
-    private void deleteImage(@RequestParam("imageId") String imageId) throws IOException {
-        this.imageService.deleteImage(imageId);
+    private CompletableFuture<Void> deleteImage(@RequestParam("imageId") String imageId) throws IOException {
+        return this.imageService.deleteImageAsync(imageId);
     }
 }

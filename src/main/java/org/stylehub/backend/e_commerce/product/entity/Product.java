@@ -4,10 +4,13 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -40,6 +43,12 @@ public class Product {
 
     @Column(nullable = false)
     private BigDecimal price;
+
+    @CreationTimestamp
+    private Instant creationDate=Instant.now();
+
+    @UpdateTimestamp
+    private Instant updateDate=Instant.now();
 
     @Column(name = "public_id",nullable = false)
     private String publicId;
