@@ -1,15 +1,18 @@
 package org.stylehub.backend.e_commerce.customer.service;
 
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.customer.dto.product.ColorDetailsDto;
+import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductsResponse;
 import org.stylehub.backend.e_commerce.customer.dto.product.ProductDetailsDto;
 import org.stylehub.backend.e_commerce.customer.dto.product.VariantsDetailsDto;
-import org.stylehub.backend.e_commerce.customer.rating.product_rating_summary.entity.ProductRatingSummary;
+import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductFilterRequest;
 import org.stylehub.backend.e_commerce.customer.rating.product_rating_summary.service.ProductRatingSummaryService;
+import org.stylehub.backend.e_commerce.customer.repository.CustomerProductRepository;
+import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.media.ProductColorImagesRepo;
 import org.stylehub.backend.e_commerce.platform.media.entity.ProductColorImages;
 import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
@@ -34,7 +37,12 @@ public class CustomerProductService {
     private final ProductVariantService productVariantService;
     private final ProductRatingSummaryService productRatingSummaryService;
     private final ProductColorImagesRepo  productColorImagesRepo;
+    private final CustomerProductRepository customerProductRepository;
     private final static Logger LOGGER = LoggerFactory.getLogger(CustomerProductService.class);
+
+    public PageResponse<FindAllProductsResponse> findAllBrandProducts(FindAllProductFilterRequest filter, Pageable pageable,String brandId) {
+        return this.customerProductRepository.findAllProductsFilter(filter, pageable,brandId);
+    }
 
     public ProductDetailsDto findProductDetails(String brandId, UUID productId) {
         LOGGER.info("starting to fetch product details={}", productId);
@@ -111,5 +119,8 @@ public class CustomerProductService {
                 avgRating
         );
     }
+
+
+
 }
 
