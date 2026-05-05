@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductsResponse;
 import org.stylehub.backend.e_commerce.customer.dto.product.ProductDetailsDto;
 import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductFilterRequest;
+import org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary;
 import org.stylehub.backend.e_commerce.customer.service.CustomerProductService;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 
@@ -33,6 +34,12 @@ public class CustomerProductController {
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDetailsDto> findProductDetails(@PathVariable("brandId")String brandId, @PathVariable("productId") UUID productId){
         return ResponseEntity.ok(customerProductService.findProductDetails(brandId,productId));
+    }
+    @GetMapping("/search")
+    public ResponseEntity<PageResponse<ProductSummary>>findProductSummary(
+            @PathVariable("brandId") String brandId
+            ,@RequestParam("search") String search, @PageableDefault(size = 10)Pageable pageable){
+        return ResponseEntity.ok(this.customerProductService.findProductSummary(search,pageable,brandId));
     }
 
 

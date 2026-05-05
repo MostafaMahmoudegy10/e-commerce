@@ -1,15 +1,13 @@
 package org.stylehub.backend.e_commerce.customer.service;
 
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.stylehub.backend.e_commerce.customer.dto.product.ColorDetailsDto;
-import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductsResponse;
-import org.stylehub.backend.e_commerce.customer.dto.product.ProductDetailsDto;
-import org.stylehub.backend.e_commerce.customer.dto.product.VariantsDetailsDto;
-import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductFilterRequest;
+import org.stylehub.backend.e_commerce.customer.dto.product.*;
 import org.stylehub.backend.e_commerce.customer.rating.product_rating_summary.service.ProductRatingSummaryService;
 import org.stylehub.backend.e_commerce.customer.repository.CustomerProductRepository;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
@@ -20,6 +18,7 @@ import org.stylehub.backend.e_commerce.product.color.service.ProductColorService
 import org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVariant;
 import org.stylehub.backend.e_commerce.product.color.variant.service.ProductVariantService;
 import org.stylehub.backend.e_commerce.product.entity.Product;
+import org.stylehub.backend.e_commerce.product.repository.ProductRepository;
 import org.stylehub.backend.e_commerce.product.service.ProductService;
 
 import java.math.BigDecimal;
@@ -38,6 +37,7 @@ public class CustomerProductService {
     private final ProductRatingSummaryService productRatingSummaryService;
     private final ProductColorImagesRepo  productColorImagesRepo;
     private final CustomerProductRepository customerProductRepository;
+    private final ProductRepository productRepository;
     private final static Logger LOGGER = LoggerFactory.getLogger(CustomerProductService.class);
 
     public PageResponse<FindAllProductsResponse> findAllBrandProducts(FindAllProductFilterRequest filter, Pageable pageable,String brandId) {
@@ -121,6 +121,28 @@ public class CustomerProductService {
     }
 
 
+    public PageResponse<ProductSummary> findProductSummary(String search, Pageable pageable,String brandId) {
 
+        Page<Object[]> result = this.productRepository.findProductSummary(search, pageable,brandId);
+
+        List<ProductSummary> productSummaryList = result.stream()
+                .map(objects -> new ProductSummary(
+                        (String) objects[0],
+                        (String) objects[1],
+                        (UUID) objects[2],
+                        (String) objects[3]
+                ))
+                .toList();
+
+        return new PageResponse<>(
+                productSummaryList,
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.hasNext(),
+                result.hasPrevious()
+        );
+    }
 }
 

@@ -1,7 +1,10 @@
 package org.stylehub.backend.e_commerce.product.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 
 import java.util.Optional;
@@ -41,4 +44,20 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     boolean existsProductByBrand_User_ExternalUserIdAndIdNot(String productName, String generalBrandId, UUID productId);
 
 
+    @Query(value = """
+         select  p.product_name_en,p.product_name_ar,p.id,p.thumbnail from Product p
+            inner join brand b
+            on b.id=p.brand_id
+            inner join users u
+            on u.id=b.user_id
+                 where p.search_vector @@ websearch_to_tsquery('simple',:search)
+                         and u.external_user_id=:brandId
+                 ORDER BY ts_rank(p.search_vector, websearch_to_tsquery('simple', :search)) DESC
+        """,nativeQuery = true
+    ,countQuery = """
+        SELECT COUNT(*)
+        FROM product p
+        WHERE p.search_vector @@ websearch_to_tsquery('simple', :search);
+        """)
+    Page<Object[]> findProductSummary(String search, Pageable pageable,String brandId);
 }
