@@ -38,10 +38,7 @@ public class CartItem {
     @JoinColumn(name = "product_variant_id",nullable = false)
     private ProductVariant productVariant;
 
-    public Integer updateCartItemQuantity(Integer newRequested) {
-        this.quantity+=newRequested;
-        return quantity;
-    }
+
 
 
 }

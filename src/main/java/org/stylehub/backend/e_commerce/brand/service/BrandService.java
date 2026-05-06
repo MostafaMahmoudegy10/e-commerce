@@ -69,5 +69,9 @@ public class BrandService {
         return true;
     }
 
+    public Brand findBrandByExternalId(String brandId) {
+        return this.brandRepository.findByUser_ExternalUserId(brandId).orElseThrow(()->new IllegalArgumentException("Brand id not found"));
+    }
+
 
 }

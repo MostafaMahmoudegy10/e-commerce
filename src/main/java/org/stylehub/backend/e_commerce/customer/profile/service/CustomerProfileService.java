@@ -36,7 +36,7 @@ public class CustomerProfileService {
         }
 
         CustomerProfile profile = customerProfileRepository
-                .findByUser_ExternalUserId(request.userId())
+                .findCustomerProfileByUser_ExternalUserId(request.userId())
                 .orElseGet(CustomerProfile::new);
 
         profile.setUser(user);
@@ -54,7 +54,7 @@ public class CustomerProfileService {
     }
     public CustomerProfile findCustomerProfileByExternalUserId(String id) {
         LOGGER.info("Starting findCustomerProfileByExternalUserId customerId={}",id);
-        CustomerProfile customerProfile= this.customerProfileRepository.findByUser_ExternalUserId(id)
+        CustomerProfile customerProfile= this.customerProfileRepository.findCustomerProfileByUser_ExternalUserId(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found please complete you profile first."));
         LOGGER.info("Finished findCustomerProfileByExternalUserId customerProfile={}",customerProfile);
         return customerProfile;

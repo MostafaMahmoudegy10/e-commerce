@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CustomerProfileRepository extends JpaRepository<CustomerProfile, UUID> {
-    Optional<CustomerProfile> findByUser_ExternalUserId(String externalUserId);
+    Optional<CustomerProfile> findCustomerProfileByUser_ExternalUserId(String userExternalUserId);
     Optional<CustomerProfile> findByUsername(String username);
     boolean existsByUsernameAndUser_ExternalUserIdNot(String username, String externalUserId);
 }

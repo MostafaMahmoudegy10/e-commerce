@@ -41,4 +41,9 @@ public class ProductVariant {
     private ProductColor productColor;
 
 
+    public BigDecimal getEffectivePrice() {
+        return this.priceOverride != null
+                ? this.priceOverride
+                : this.productColor.getProduct().getPrice();
+    }
 }

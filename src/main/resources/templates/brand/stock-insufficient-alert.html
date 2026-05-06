@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Stock Alert</title>
+    <style>{{EMAIL_CSS}}</style>
+</head>
+<body>
+<div class="email-wrapper">
+    <div class="card">
+        <div class="hero">
+            <span class="badge">STYLEHUB INVENTORY</span>
+            <h1>Stock needs your attention</h1>
+            <p class="hero-text">
+                Hi {{RECIPIENT}}, a customer tried to add more items than currently available.
+            </p>
+        </div>
+
+        <div class="product-panel">
+            <p class="panel-label">Product</p>
+            <h2>{{PRODUCT_NAME}}</h2>
+            <p class="sku">SKU: {{SKU}}</p>
+        </div>
+
+        <div class="stock-grid">
+            <div class="stock-box">
+                <p class="stock-label">Requested</p>
+                <p class="stock-number">{{REQUESTED_QUANTITY}}</p>
+            </div>
+
+            <div class="stock-box warning">
+                <p class="stock-label">Available</p>
+                <p class="stock-number">{{AVAILABLE_STOCK}}</p>
+            </div>
+        </div>
+
+        <p class="message">
+            This product may be missing potential sales. Consider increasing the available stock for this SKU.
+        </p>
+
+        <div class="divider"></div>
+
+        <p class="footer">
+            This is an automated inventory notification from StyleHub.
+        </p>
+        <p class="footer muted">
+            You received this email because you manage this brand on StyleHub.
+        </p>
+    </div>
+</div>
+</body>
+</html>
