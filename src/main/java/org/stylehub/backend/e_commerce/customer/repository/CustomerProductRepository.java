@@ -5,6 +5,8 @@ import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductFilter
 import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductsResponse;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 
+import java.util.UUID;
+
 public interface CustomerProductRepository {
-    PageResponse<FindAllProductsResponse> findAllProductsFilter(FindAllProductFilterRequest filter, Pageable pageable,String brandId);
+    PageResponse<FindAllProductsResponse> findAllProductsFilter(FindAllProductFilterRequest filter, Pageable pageable, String brandId, UUID customerId);
 }

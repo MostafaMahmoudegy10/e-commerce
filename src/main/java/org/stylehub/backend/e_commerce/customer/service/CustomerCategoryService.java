@@ -1,4 +1,4 @@
-package org.stylehub.backend.e_commerce.customer.profile.service;
+package org.stylehub.backend.e_commerce.customer.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

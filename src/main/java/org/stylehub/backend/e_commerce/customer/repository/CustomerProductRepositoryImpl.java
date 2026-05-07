@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductFilterRequest;
 import org.stylehub.backend.e_commerce.customer.dto.product.FindAllProductsResponse;
 import org.stylehub.backend.e_commerce.customer.rating.product_rating_summary.entity.ProductRatingSummary;
+import org.stylehub.backend.e_commerce.favourite.entity.Favourite;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
@@ -18,6 +19,7 @@ import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -31,7 +33,8 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
     public PageResponse<FindAllProductsResponse> findAllProductsFilter(
             FindAllProductFilterRequest filter,
             Pageable pageable,
-            String brandId
+            String brandId,
+            UUID customerId
     ) {
         try (EntityManager entityManager = this.getEntityManager()) {
 
@@ -88,6 +91,27 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
                             rootProduct.get("id")
                     ));
 
+            Subquery<Favourite> favouriteSubquery =
+                    criteriaQuery.subquery(Favourite.class);
+
+            Root<Favourite> favouriteRoot =
+                    favouriteSubquery.from(Favourite.class);
+
+            favouriteSubquery.select(favouriteRoot)
+                    .where(
+                            cb.equal(
+                                    favouriteRoot.get("product").get("id"),
+                                    rootProduct.get("id")
+                            ),
+                            cb.equal(
+                                    favouriteRoot.get("customer").get("id"),
+                                    customerId
+                            )
+                    );
+
+            Expression<Boolean> isFavourite =
+                    cb.exists(favouriteSubquery);
+
             Predicate predicate = cb.conjunction();
 
             predicate= cb.and(predicate,
@@ -136,6 +160,7 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
             criteriaQuery.select(
                     cb.construct(
                             FindAllProductsResponse.class,
+                            rootProduct.get("id"),
                             rootProduct.get("thumbnail"),
                             rootProduct.get("productNameEn"),
                             rootProduct.get("productNameAr"),
@@ -145,7 +170,8 @@ public class CustomerProductRepositoryImpl implements CustomerProductRepository 
                             rootProduct.get("productDescriptionAr"),
                             cb.coalesce(minRatingSubQuery, BigDecimal.ZERO),
                             countColorPerProductSubQuery,
-                            countProductStockVarianceSubQuery
+                            countProductStockVarianceSubQuery,
+                            isFavourite
                     )
             );
 

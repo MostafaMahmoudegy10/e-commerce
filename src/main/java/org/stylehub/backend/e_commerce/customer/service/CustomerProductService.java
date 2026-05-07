@@ -8,11 +8,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.customer.dto.product.*;
+import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
+import org.stylehub.backend.e_commerce.customer.profile.service.CustomerProfileService;
 import org.stylehub.backend.e_commerce.customer.rating.product_rating_summary.service.ProductRatingSummaryService;
 import org.stylehub.backend.e_commerce.customer.repository.CustomerProductRepository;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.media.ProductColorImagesRepo;
 import org.stylehub.backend.e_commerce.platform.media.entity.ProductColorImages;
+import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
 import org.stylehub.backend.e_commerce.product.color.service.ProductColorService;
 import org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVariant;
@@ -37,11 +40,14 @@ public class CustomerProductService {
     private final ProductRatingSummaryService productRatingSummaryService;
     private final ProductColorImagesRepo  productColorImagesRepo;
     private final CustomerProductRepository customerProductRepository;
+    private final CustomerProfileService customerProfileService;
     private final ProductRepository productRepository;
+    private final CurrentUserProvider currentUserProvider;
     private final static Logger LOGGER = LoggerFactory.getLogger(CustomerProductService.class);
 
     public PageResponse<FindAllProductsResponse> findAllBrandProducts(FindAllProductFilterRequest filter, Pageable pageable,String brandId) {
-        return this.customerProductRepository.findAllProductsFilter(filter, pageable,brandId);
+        CustomerProfile cst= customerProfileService.findCustomerProfileByExternalUserId(currentUserProvider.externalId());
+        return this.customerProductRepository.findAllProductsFilter(filter, pageable,brandId,cst.getId());
     }
 
     public ProductDetailsDto findProductDetails(String brandId, UUID productId) {

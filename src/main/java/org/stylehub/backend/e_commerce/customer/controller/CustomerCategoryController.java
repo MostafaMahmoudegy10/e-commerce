@@ -1,16 +1,16 @@
-package org.stylehub.backend.e_commerce.customer.profile;
+package org.stylehub.backend.e_commerce.customer.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.stylehub.backend.e_commerce.customer.profile.dto.category.CategoryNameDto;
-import org.stylehub.backend.e_commerce.customer.profile.service.CustomerCategoryService;
+import org.stylehub.backend.e_commerce.customer.service.CustomerCategoryService;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/customer/brand/{brandId}/categories")
+@RequestMapping("api/v1/customer/brands/{brandId}/categories")
 @RequiredArgsConstructor
 public class CustomerCategoryController {
 
