@@ -2,8 +2,11 @@ package org.stylehub.backend.e_commerce.customer.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.service.BrandService;
@@ -12,9 +15,11 @@ import org.stylehub.backend.e_commerce.cart.entity.CartStatus;
 import org.stylehub.backend.e_commerce.cart.item.entity.CartItem;
 import org.stylehub.backend.e_commerce.cart.item.repository.CartItemRepository;
 import org.stylehub.backend.e_commerce.cart.repository.CartRepository;
-import org.stylehub.backend.e_commerce.customer.dto.AddToCartRequest;
+import org.stylehub.backend.e_commerce.customer.dto.cart.AddToCartRequest;
+import org.stylehub.backend.e_commerce.customer.dto.cart.CartItemViewResponse;
 import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
 import org.stylehub.backend.e_commerce.customer.profile.service.CustomerProfileService;
+import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.mail.events.InsufficientStockRequestedEvent;
 import org.stylehub.backend.e_commerce.platform.mail.publisher.EmailEventPublisher;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
@@ -22,8 +27,10 @@ import org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVaria
 import org.stylehub.backend.e_commerce.product.color.variant.repository.ProductVariantRepository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 
 @Service
@@ -112,6 +119,41 @@ public class CustomerCartService {
         return Map.of("Saved quantity of "+variant.getSku(),savedCartItem.getQuantity());
     }
 
+    public PageResponse<CartItemViewResponse> viewCart(String brandExternalId, Pageable pageable){
+        // find customer profile
+        CustomerProfile customer= this.customerProfileService.findCustomerProfileByExternalUserId(currentUserProvider.externalId());
+
+        // find related brand
+        Brand brand = this.brandService.findBrandByExternalId(brandExternalId);
+
+        // first we get the cart by status-> active , cust id , brand id
+        Cart cart = this.cartRepository.findCartByCartStatusAndCustomer_IdAndBrand_Id(CartStatus.ACTIVE,customer.getId(),brand.getId())
+                .orElseGet(()->{
+                   Cart newCart= new Cart();
+                   newCart.setCartStatus(CartStatus.ACTIVE);
+                   newCart.setBrand(brand);
+                   newCart.setCustomer(customer);
+                   return this.cartRepository.save(newCart);
+                });
+        Page<CartItemViewResponse> response= this.cartItemRepository.findCartViewResponseByCart_Id(cart.getId(),pageable);
+
+        return new PageResponse<CartItemViewResponse>(
+                    response.getContent(),
+                    response.getNumber(),
+                    response.getSize(),
+                    response.getTotalElements(),
+                    response.getTotalPages(),
+                    response.hasNext(),
+                    response.hasPrevious()
+                );
+    }
+
+    @Transactional
+    public  String removeFromCart(UUID cartId, UUID cartItemId) {
+        this.cartItemRepository.deleteCartItemByCart_IdAndId(cartId,cartItemId);
+        return "cart item deleted successfully";
+    }
+
     private boolean stockAvailable(Integer requestedQuantity,String sku, Integer stock, InsufficientStockRequestedEvent eventFirstStock) {
         if(requestedQuantity>stock){
             this.emailEventPublisher.publishInsufficientStockRequested(eventFirstStock);
@@ -130,4 +172,7 @@ public class CustomerCartService {
         cartItem.setQuantity(sum);
         return cartItemRepository.save(cartItem);
     }
+
+
+
 }

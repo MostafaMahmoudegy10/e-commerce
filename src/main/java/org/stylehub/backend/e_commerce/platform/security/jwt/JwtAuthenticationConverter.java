@@ -1,5 +1,9 @@
 package org.stylehub.backend.e_commerce.platform.security.jwt;
 
+
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,8 +14,10 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import java.util.*;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationConverter.class);
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         Collection<GrantedAuthority> authorities = extractAuthorities(jwt);
@@ -31,11 +37,14 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
             normalizedRoles.add(singleRoleClaim);
         }
 
-        return normalizedRoles.stream()
+        Set<GrantedAuthority> finalRoles =normalizedRoles.stream()
                 .map(this::normalizeRole)
                 .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toSet());
+
+        LOGGER.info("Authorities: {}", finalRoles);
+        return finalRoles;
     }
 
     private String normalizeRole(String rawRole) {

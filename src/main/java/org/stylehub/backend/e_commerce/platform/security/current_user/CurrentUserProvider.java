@@ -19,6 +19,7 @@ public class CurrentUserProvider {
 
     private final UserRepository userRepository;
 
+
     public AuthenticatedUser getCurrentUser() {
         String externalId = externalId();
 

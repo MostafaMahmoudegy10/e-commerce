@@ -12,7 +12,7 @@ import org.stylehub.backend.e_commerce.customer.rating.product_rating.service.Pr
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/customers/brands/{brandId}/products/{productId}/rating")
+@RequestMapping("api/v1/customer/brands/{brandId}/products/{productId}/rating")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('CUSTOMER')")
 public class CustomerRatingController {

@@ -34,7 +34,6 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/", "/api/v1/public/**", "/error").permitAll()
                 .requestMatchers("/api/v1/brands/**").hasRole("BRAND_OWNER") // a brand owner
-                .requestMatchers("/api/v1/customer/**").hasAnyRole("CUSTOMER", "BRAND_OWNER") // customer
                 .anyRequest().authenticated()
                  ).oauth2ResourceServer(o->
                  o.jwt(jwt -> jwt.jwtAuthenticationConverter(new JwtAuthenticationConverter()))

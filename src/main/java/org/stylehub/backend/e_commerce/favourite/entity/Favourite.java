@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.stylehub.backend.e_commerce.brand.entity.Brand;
+import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.user.entity.User;
 
@@ -16,7 +19,7 @@ import java.util.UUID;
 @Table(
         name = "favourite",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uq_fav_id_user_id",columnNames = {"product_id","user_id"})
+                @UniqueConstraint(name = "uq_customer_brand_fav",columnNames = {"product_id","customer_id","brand_id"})
         }
 )
 public class Favourite {
@@ -26,15 +29,23 @@ public class Favourite {
     private UUID id;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(name = "create_at", nullable = false, updatable = false)
+    private Instant createAt=Instant.now();
+
+    @UpdateTimestamp
+    @Column(name = "update_at", nullable = false, updatable = false)
+    private Instant updateAt=Instant.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id",nullable = false)
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",nullable = false)
-    private User user;
+    @JoinColumn(name = "customer_id",nullable = false)
+    private CustomerProfile customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id",nullable = false)
+    private Brand brand;
 
 }
