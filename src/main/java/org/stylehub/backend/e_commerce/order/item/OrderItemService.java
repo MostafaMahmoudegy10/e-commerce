@@ -10,8 +10,7 @@ import org.stylehub.backend.e_commerce.cart.item.repository.CartItemRepository;
 import org.stylehub.backend.e_commerce.order.entity.Order;
 import org.stylehub.backend.e_commerce.order.item.entity.OrderItem;
 import org.stylehub.backend.e_commerce.order.item.repoistory.OrderItemRepository;
-import org.stylehub.backend.e_commerce.order.repository.OrderRepository;
-import org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVariant;
+
 
 import java.util.List;
 import java.util.UUID;

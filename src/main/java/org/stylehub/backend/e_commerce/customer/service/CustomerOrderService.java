@@ -21,7 +21,6 @@ import org.stylehub.backend.e_commerce.order.entity.Order;
 import org.stylehub.backend.e_commerce.order.entity.OrderStatus;
 import org.stylehub.backend.e_commerce.order.event.OrderCreationEvent;
 import org.stylehub.backend.e_commerce.order.item.OrderItemService;
-import org.stylehub.backend.e_commerce.order.payment.PaymentService;
 import org.stylehub.backend.e_commerce.order.payment.entity.Payment;
 import org.stylehub.backend.e_commerce.order.payment.entity.PaymentStatus;
 import org.stylehub.backend.e_commerce.order.payment.repository.PaymentRepository;
@@ -80,6 +79,15 @@ public class CustomerOrderService {
                         .orElseThrow(()->new RuntimeException("Payment not found"));
                 payment.setPaymentStatus(PaymentStatus.FAILED);
                 paymentRepository.save(payment);
+                return new CheckoutResponse(
+                        cancelled.getId(),
+                        cancelled.getOrderNumber(),
+                        brand.getBrandName(),
+                        cancelled.getTotalPrice(),
+                        cancelled.getOrderStatus(),
+                        PaymentStatus.FAILED,
+                        "Pending order cancelled because a newer checkout was created."
+                );
             }
 
             Order newOrder=new Order();
@@ -90,9 +98,10 @@ public class CustomerOrderService {
             newOrder.setOrderStatus(OrderStatus.PENDING);
             newOrder.setOrderNumber(newOrder.generateOrderNumber());
             Order order= orderRepository.save(newOrder);
+
+            LOGGER.info("ORDER CREATED={}",order.getId());
             // now convert to order items
             this.orderItemService.saveAllOrderItems(cart.getId(),order);
-            // now you can add an event
             this.addCreationEvent(order,customerProfile,brand);
 
 
@@ -144,6 +153,7 @@ public class CustomerOrderService {
         return cart;
     }
     private void addCreationEvent(Order order,CustomerProfile customerProfile,Brand brand){
+        LOGGER.info("starting adding order event");
         OrderCreationEvent orderCreationEvent=new OrderCreationEvent(
                 order.getId(),
                 order.getOrderNumber(),
@@ -159,6 +169,6 @@ public class CustomerOrderService {
                 Instant.now()
 
         );
-        this.orderPublisherEvents.orderCreated(orderCreationEvent);
+        this.orderPublisherEvents.publishOrderCreated(orderCreationEvent);
     }
 }

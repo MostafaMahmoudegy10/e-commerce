@@ -1,0 +1,1 @@
+alter table order_item drop cart_item_id;

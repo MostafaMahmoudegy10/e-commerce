@@ -154,7 +154,7 @@ public class CustomerCartService {
         return "cart item deleted successfully";
     }
 
-    private boolean stockAvailable(Integer requestedQuantity,String sku, Integer stock, InsufficientStockRequestedEvent eventFirstStock) {
+    public boolean stockAvailable(Integer requestedQuantity,String sku, Integer stock, InsufficientStockRequestedEvent eventFirstStock) {
         if(requestedQuantity>stock){
             this.emailEventPublisher.publishInsufficientStockRequested(eventFirstStock);
             throw new IllegalArgumentException("requestedQuantity exceeds the Stock what available now for "+sku+ " is "+stock);

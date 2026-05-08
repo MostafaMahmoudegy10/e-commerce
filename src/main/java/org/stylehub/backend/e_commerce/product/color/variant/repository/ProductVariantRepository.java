@@ -34,4 +34,5 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
                 u.externalUserId=:brandId
         """)
     Optional<ProductVariant> findProductVariantByIdAndBrandId(UUID productVariantId, String brandId);
+
 }
