@@ -1,0 +1,1 @@
+alter table payment drop constraint uq_order_payment_status;

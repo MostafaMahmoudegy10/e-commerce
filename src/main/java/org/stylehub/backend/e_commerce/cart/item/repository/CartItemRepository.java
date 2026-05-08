@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.stylehub.backend.e_commerce.cart.item.entity.CartItem;
 import org.stylehub.backend.e_commerce.customer.dto.cart.CartItemViewResponse;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,4 +47,12 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
     Page<CartItemViewResponse> findCartViewResponseByCart_Id(UUID cartId, Pageable pageable);
 
     Optional<CartItem>deleteCartItemByCart_IdAndId(UUID cartId, UUID cartItemId);
+
+    boolean existsByCart_Id(UUID cartId);
+
+    @Query("""
+        select sum(ci.totalPrice) from CartItem  ci
+        where ci.cart.id=:cartId 
+                """)
+    BigDecimal findTotalPriceByCartId(UUID cartId);
 }

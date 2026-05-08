@@ -1,0 +1,1 @@
+alter table customer_profiles add column customer_email varchar(255) not null default 'mostafa.mahmoudegy20@gmail.com';

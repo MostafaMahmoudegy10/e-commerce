@@ -5,6 +5,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.stylehub.backend.e_commerce.brand.entity.Brand;
+import org.stylehub.backend.e_commerce.cart.entity.Cart;
+import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
 import org.stylehub.backend.e_commerce.order.item.entity.OrderItem;
 import org.stylehub.backend.e_commerce.user.entity.User;
 
@@ -36,10 +39,26 @@ public class Order {
     private Timestamp createdAt;
 
     @ManyToOne
-    @JoinColumn(nullable = false,name = "user_id")
-    private User user;
+    @JoinColumn(nullable = false,name = "customer_id")
+    private CustomerProfile customer;
 
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE},
-    mappedBy = "order")
-    private Set<OrderItem> orderItems;
+    @Column(nullable = false, unique = true)
+    private String orderNumber;
+
+    @ManyToOne
+    @JoinColumn(name = "brand_id",nullable = false)
+    private Brand brand;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cart_id",nullable = false)
+    private Cart cart;
+
+
+    public String generateOrderNumber() {
+        return "SH-" + UUID.randomUUID()
+                .toString()
+                .substring(0, 8)
+                .toUpperCase();
+    }
 }

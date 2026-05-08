@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.stylehub.backend.e_commerce.order.entity.Order;
+import org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVariant;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 
 import java.math.BigDecimal;
@@ -30,8 +31,8 @@ public class OrderItem {
     private BigDecimal totalPrice;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @JoinColumn(name = "product_variant_id", nullable = false)
+    private ProductVariant variant;
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)

@@ -1,4 +1,4 @@
-package org.stylehub.backend.e_commerce.platform.config.rabbitmq;
+package org.stylehub.backend.e_commerce.platform.config.rabbitmq.brand;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

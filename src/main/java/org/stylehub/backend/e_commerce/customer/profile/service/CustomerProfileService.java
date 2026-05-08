@@ -47,6 +47,7 @@ public class CustomerProfileService {
         profile.setBio("no bio");
         profile.setGender(Gender.fromCode('M'));
         profile.setProfileImageUrl("image.jpg");
+        profile.setCustomerEmail(request.email());
 
         customerProfileRepository.save(profile);
 

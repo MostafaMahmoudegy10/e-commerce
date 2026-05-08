@@ -1,0 +1,1 @@
+alter table orders drop column  user_id;
