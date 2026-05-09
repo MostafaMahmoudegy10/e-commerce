@@ -17,8 +17,8 @@ public interface FavouriteRepository extends JpaRepository<Favourite, UUID> {
 
     @Query(value = """
         select new org.stylehub.backend.e_commerce.favourite.dto.WishlistView(
-           ca.username,b.brandName,p.id,p.productNameEn,p.productNameAr,p.productDescriptionEn
-           ,p.thumbnail,p.productDescriptionAr
+           ca.username,b.brandName,p.id,p.productNameEn,p.productNameAr
+           ,p.thumbnail,p.productDescriptionEn,p.productDescriptionAr
            ,c.categoryNameEn,c.categoryNameAr
            )
         from Favourite f
