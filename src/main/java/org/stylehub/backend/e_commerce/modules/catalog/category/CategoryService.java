@@ -80,10 +80,10 @@ public class CategoryService {
         return toResponse(savedCategory);
     }
 
-    public Map<String,Object> findAllBrandCategories(Pageable pageable, String brandId){
+    public Map<String,Object> findAllBrandCategories(Pageable pageable){
         // first get owner brand id
         Page<findAllByBrandId> categoryPage
-                =this.categoryRepository.findAllByBrandExternalUserId(brandId,pageable);
+                =this.categoryRepository.findAllByBrandExternalUserId(currentUserProvider.externalId(),pageable);
         return mapPaginatedResponse(categoryPage);
     }
 

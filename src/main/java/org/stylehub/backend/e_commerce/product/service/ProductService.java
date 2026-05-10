@@ -2,11 +2,17 @@ package org.stylehub.backend.e_commerce.product.service;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.service.BrandService;
+import org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.ProductPatchRequest;
+import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
@@ -180,5 +186,10 @@ public class ProductService {
         String brandId = currentUserProvider.externalId();
         this.brandService.isBrandExists(brandId);
         return brandId;
+    }
+
+    public Page<ProductSummary> findAllProductsForBrand(Pageable pageable) {
+        Brand brand=this.brandService.findBrandByExternalId(currentUserProvider.externalId());
+        return this.productRepository.findAllProductsForBrand(brand.getId(),pageable);
     }
 }

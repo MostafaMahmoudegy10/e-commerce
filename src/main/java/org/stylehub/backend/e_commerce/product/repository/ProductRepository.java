@@ -60,4 +60,18 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
         WHERE p.search_vector @@ websearch_to_tsquery('simple', :search);
         """)
     Page<Object[]> findProductSummary(String search, Pageable pageable,String brandId);
+
+    @Query(value = """
+          select new   org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary(
+                p.productNameAr,
+                p.productNameEn,
+                p.id,
+                p.thumbnail                  
+                  ) from Product p
+          where p.brand.id=:brandId
+        """,countQuery = """
+            select count(p.id) from Product p
+            where p.brand.id=:brandId        
+        """)
+    Page<ProductSummary> findAllProductsForBrand(UUID brandId, Pageable pageable);
 }

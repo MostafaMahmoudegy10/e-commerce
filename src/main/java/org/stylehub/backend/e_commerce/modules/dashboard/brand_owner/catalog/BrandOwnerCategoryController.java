@@ -10,6 +10,8 @@ import org.stylehub.backend.e_commerce.modules.catalog.category.CategoryService;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryCreateRequest;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryPatchRequest;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryResponse;
+import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
+import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 
 import java.util.Map;
 import java.util.UUID;
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class BrandOwnerCategoryController {
 
     private final CategoryService categoryService;
+    private final CurrentUserProvider currentUserProvider;
 
     @PostMapping()
     public ResponseEntity<CategoryResponse> addNewCategory(
@@ -40,4 +43,5 @@ public class BrandOwnerCategoryController {
     public ResponseEntity<CategoryResponse> updateCategory(@PathVariable("categoryId") UUID CategoryId, @ModelAttribute CategoryPatchRequest patchRequest) {
         return ResponseEntity.ok(this.categoryService.patchBrandCategory(CategoryId, patchRequest));
     }
+
 }

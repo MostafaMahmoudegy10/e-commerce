@@ -16,16 +16,15 @@ import java.util.UUID;
 @RestController
 @RequestMapping(value = "api/v1/categories/brands")
 @AllArgsConstructor
-@PreAuthorize("hasAnyRole('CUSTOMER','BRAND_OWNER')")
+@PreAuthorize("hasAnyRole('BRAND_OWNER')")
 public class CategoryController {
 
     private final CategoryService categoryService;
 
     @GetMapping()
     public ResponseEntity<Map<String,Object>>getAllCategories(
-            @RequestParam("brandId") String brandId,
             @PageableDefault(page = 0,size=10) Pageable pageable
     ) {
-        return ResponseEntity.ok(this.categoryService.findAllBrandCategories(pageable,brandId));
+        return ResponseEntity.ok(this.categoryService.findAllBrandCategories(pageable));
     }
 }
