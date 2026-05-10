@@ -72,17 +72,14 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
                     c.categoryNameEn,
                     c.categoryNameAr,
                     count(distinct pc.id),
-                    coalesce(
-                        min(
-                            case
-                                when pv.priceOverride is not null and pv.priceOverride < p.price
-                                then pv.priceOverride
-                                else p.price
-                            end
-                        ),
-                        p.price
-                    )
-                )
+                   min(
+                       case
+                           when pv.priceOverride is not null and pv.priceOverride < p.price
+                           then pv.priceOverride
+                           else p.price
+                       end
+                   )
+               ) 
                 from Product p
                 join p.category c
                 left join ProductColor pc on pc.product = p

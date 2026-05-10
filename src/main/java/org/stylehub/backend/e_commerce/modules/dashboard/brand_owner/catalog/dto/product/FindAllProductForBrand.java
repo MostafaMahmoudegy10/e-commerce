@@ -11,6 +11,6 @@ public record FindAllProductForBrand(
         String categoryNameEn,
         String categoryNameAr,
         Long currentColors,
-        Integer basePrice
+        BigDecimal basePrice
 ) {
 }
