@@ -12,6 +12,7 @@ import org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.ProductPatchRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.FindAllProductForBrand;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
@@ -188,7 +189,7 @@ public class ProductService {
         return brandId;
     }
 
-    public Page<ProductSummary> findAllProductsForBrand(Pageable pageable) {
+    public Page<FindAllProductForBrand> findAllProductsForBrand(Pageable pageable) {
         Brand brand=this.brandService.findBrandByExternalId(currentUserProvider.externalId());
         return this.productRepository.findAllProductsForBrand(brand.getId(),pageable);
     }

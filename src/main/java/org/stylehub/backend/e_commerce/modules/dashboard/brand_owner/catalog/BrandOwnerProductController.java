@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.stylehub.backend.e_commerce.customer.dto.product.ProductDetailsDto;
 import org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.ProductPatchRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.FindAllProductForBrand;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.product.dto.ProductCreationRequest;
 import org.stylehub.backend.e_commerce.product.dto.ProductCreationResponse;
@@ -45,7 +46,8 @@ public class BrandOwnerProductController {
         return ResponseEntity.ok("Product deleted");
     }
     @GetMapping
-    public ResponseEntity<Page<ProductSummary>> findAllProductsForBrand(@PageableDefault Pageable pageable){
+    public ResponseEntity<Page<FindAllProductForBrand>> findAllProductsForBrand(@PageableDefault Pageable pageable){
         return ResponseEntity.ok(this.productService.findAllProductsForBrand(pageable));
     }
+
 }

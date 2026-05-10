@@ -4,7 +4,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.FindAllProductForBrand;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 
 import java.util.Optional;
@@ -62,16 +64,45 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     Page<Object[]> findProductSummary(String search, Pageable pageable,String brandId);
 
     @Query(value = """
-          select new   org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary(
-                p.productNameAr,
-                p.productNameEn,
-                p.id,
-                p.thumbnail                  
-                  ) from Product p
-          where p.brand.id=:brandId
-        """,countQuery = """
-            select count(p.id) from Product p
-            where p.brand.id=:brandId        
-        """)
-    Page<ProductSummary> findAllProductsForBrand(UUID brandId, Pageable pageable);
-}
+               select new org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.FindAllProductForBrand(
+                    p.productNameAr,
+                    p.productNameEn,
+                    p.id,
+                    p.thumbnail,
+                    c.categoryNameEn,
+                    c.categoryNameAr,
+                    count(distinct pc.id),
+                    coalesce(
+                        min(
+                            case
+                                when pv.priceOverride is not null and pv.priceOverride < p.price
+                                then pv.priceOverride
+                                else p.price
+                            end
+                        ),
+                        p.price
+                    )
+                )
+                from Product p
+                join p.category c
+                left join ProductColor pc on pc.product = p
+                left join ProductVariant pv on pv.productColor = pc
+                where p.brand.id = :brandId
+                group by
+                    p.productNameAr,
+                    p.productNameEn,
+                    p.id,
+                    p.thumbnail,
+                    c.categoryNameEn,
+                    c.categoryNameAr,
+                    p.price
+            """,countQuery = """
+        select count(p.id)
+        from Product p
+        where p.brand.id = :brandId
+    """
+    )
+    Page<FindAllProductForBrand> findAllProductsForBrand(
+            @Param("brandId") UUID brandId,
+            Pageable pageable
+    );}
