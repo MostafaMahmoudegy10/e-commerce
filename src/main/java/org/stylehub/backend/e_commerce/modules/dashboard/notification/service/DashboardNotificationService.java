@@ -5,7 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.stylehub.backend.e_commerce.model.gig.event.ModelAgreementApprovedEvent;
+import org.stylehub.backend.e_commerce.model.gig.event.ModelAgreementPaymentFailedEvent;
+import org.stylehub.backend.e_commerce.model.gig.event.ModelAgreementPaymentSucceededEvent;
+import org.stylehub.backend.e_commerce.model.gig.event.ModelAgreementRevisionRequestedEvent;
+import org.stylehub.backend.e_commerce.model.gig.event.ModelAgreementSubmittedEvent;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestAcceptedEvent;
+import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCancelledEvent;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCreatedEvent;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestRejectedEvent;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationFilterRequest;
@@ -132,6 +138,130 @@ public class DashboardNotificationService {
         notification.setReferenceCode(event.requestNumber());
         notification.setActionUrl(null);
         this.dashboardNotificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotificationForRequestCancelled(ModelGigRequestCancelledEvent event) {
+        User recipient = findUser(event.modelUserId());
+        DashboardNotification notification = new DashboardNotification();
+        notification.setRecipientUser(recipient);
+        notification.setType(DashboardNotificationType.MODEL_REQUEST);
+        notification.setTitle("Request cancelled");
+        notification.setMessage(event.brandName() + " cancelled request " + event.requestNumber() + ".");
+        notification.setReferenceType("MODEL_GIG_REQUEST");
+        notification.setReferenceId(event.requestId());
+        notification.setReferenceCode(event.requestNumber());
+        notification.setActionUrl(null);
+        this.dashboardNotificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotificationForAgreementSubmitted(ModelAgreementSubmittedEvent event) {
+        User recipient = findUser(event.brandUserId());
+        DashboardNotification notification = new DashboardNotification();
+        notification.setRecipientUser(recipient);
+        notification.setType(DashboardNotificationType.SUBMISSION);
+        notification.setTitle("New submission received");
+        notification.setMessage(event.modelName() + " submitted files for agreement " + event.agreementNumber() + ".");
+        notification.setReferenceType("MODEL_AGREEMENT_SUBMISSION");
+        notification.setReferenceId(event.submissionId());
+        notification.setReferenceCode(event.agreementNumber());
+        notification.setActionUrl(null);
+        this.dashboardNotificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotificationForRevisionRequested(ModelAgreementRevisionRequestedEvent event) {
+        User recipient = findUser(event.modelUserId());
+        DashboardNotification notification = new DashboardNotification();
+        notification.setRecipientUser(recipient);
+        notification.setType(DashboardNotificationType.SUBMISSION);
+        notification.setTitle("Revision requested");
+        notification.setMessage(
+                event.feedback() == null || event.feedback().isBlank()
+                        ? "A revision was requested for agreement " + event.agreementNumber() + "."
+                        : "A revision was requested for agreement " + event.agreementNumber() + ". Feedback: " + event.feedback()
+        );
+        notification.setReferenceType("MODEL_AGREEMENT_SUBMISSION");
+        notification.setReferenceId(event.submissionId());
+        notification.setReferenceCode(event.agreementNumber());
+        notification.setActionUrl(null);
+        this.dashboardNotificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotificationForAgreementApproved(ModelAgreementApprovedEvent event) {
+        User recipient = findUser(event.modelUserId());
+        DashboardNotification notification = new DashboardNotification();
+        notification.setRecipientUser(recipient);
+        notification.setType(DashboardNotificationType.PAYMENT);
+        notification.setTitle("Submission approved");
+        notification.setMessage("Your submission for agreement " + event.agreementNumber() + " was approved. Payment is now pending.");
+        notification.setReferenceType("MODEL_AGREEMENT");
+        notification.setReferenceId(event.agreementId());
+        notification.setReferenceCode(event.agreementNumber());
+        notification.setActionUrl(null);
+        this.dashboardNotificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotificationForPaymentSucceeded(ModelAgreementPaymentSucceededEvent event) {
+        DashboardNotification brandNotification = new DashboardNotification();
+        brandNotification.setRecipientUser(findUser(event.brandUserId()));
+        brandNotification.setType(DashboardNotificationType.PAYMENT);
+        brandNotification.setTitle("Payment completed");
+        brandNotification.setMessage("Payment for agreement " + event.agreementNumber() + " was completed successfully.");
+        brandNotification.setReferenceType("MODEL_AGREEMENT_PAYMENT");
+        brandNotification.setReferenceId(event.paymentId());
+        brandNotification.setReferenceCode(event.agreementNumber());
+        brandNotification.setActionUrl(null);
+
+        DashboardNotification modelNotification = new DashboardNotification();
+        modelNotification.setRecipientUser(findUser(event.modelUserId()));
+        modelNotification.setType(DashboardNotificationType.PAYMENT);
+        modelNotification.setTitle("Payment received");
+        modelNotification.setMessage("Payment for agreement " + event.agreementNumber() + " was completed successfully.");
+        modelNotification.setReferenceType("MODEL_AGREEMENT_PAYMENT");
+        modelNotification.setReferenceId(event.paymentId());
+        modelNotification.setReferenceCode(event.agreementNumber());
+        modelNotification.setActionUrl(null);
+
+        this.dashboardNotificationRepository.save(brandNotification);
+        this.dashboardNotificationRepository.save(modelNotification);
+    }
+
+    @Transactional
+    public void createNotificationForPaymentFailed(ModelAgreementPaymentFailedEvent event) {
+        DashboardNotification brandNotification = new DashboardNotification();
+        brandNotification.setRecipientUser(findUser(event.brandUserId()));
+        brandNotification.setType(DashboardNotificationType.PAYMENT);
+        brandNotification.setTitle("Payment failed");
+        brandNotification.setMessage(
+                event.failureReason() == null || event.failureReason().isBlank()
+                        ? "Payment for agreement " + event.agreementNumber() + " failed."
+                        : "Payment for agreement " + event.agreementNumber() + " failed. Reason: " + event.failureReason()
+        );
+        brandNotification.setReferenceType("MODEL_AGREEMENT_PAYMENT");
+        brandNotification.setReferenceId(event.paymentId());
+        brandNotification.setReferenceCode(event.agreementNumber());
+        brandNotification.setActionUrl(null);
+
+        DashboardNotification modelNotification = new DashboardNotification();
+        modelNotification.setRecipientUser(findUser(event.modelUserId()));
+        modelNotification.setType(DashboardNotificationType.PAYMENT);
+        modelNotification.setTitle("Brand payment failed");
+        modelNotification.setMessage(
+                event.failureReason() == null || event.failureReason().isBlank()
+                        ? "Payment for agreement " + event.agreementNumber() + " failed and may be retried."
+                        : "Payment for agreement " + event.agreementNumber() + " failed. Reason: " + event.failureReason()
+        );
+        modelNotification.setReferenceType("MODEL_AGREEMENT_PAYMENT");
+        modelNotification.setReferenceId(event.paymentId());
+        modelNotification.setReferenceCode(event.agreementNumber());
+        modelNotification.setActionUrl(null);
+
+        this.dashboardNotificationRepository.save(brandNotification);
+        this.dashboardNotificationRepository.save(modelNotification);
     }
 
     private User findUser(UUID userId) {

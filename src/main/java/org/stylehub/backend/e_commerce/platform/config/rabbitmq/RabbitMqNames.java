@@ -29,6 +29,24 @@ public final class RabbitMqNames {
     public static final String MODEL_GIG_REQUEST_REJECTED_ROUTING_KEY =
             "ecommerce.model.gig.request.rejected";
 
+    public static final String MODEL_GIG_REQUEST_CANCELLED_ROUTING_KEY =
+            "ecommerce.model.gig.request.cancelled";
+
+    public static final String MODEL_AGREEMENT_SUBMITTED_ROUTING_KEY =
+            "ecommerce.model.agreement.submitted";
+
+    public static final String MODEL_AGREEMENT_REVISION_REQUESTED_ROUTING_KEY =
+            "ecommerce.model.agreement.revision.requested";
+
+    public static final String MODEL_AGREEMENT_APPROVED_ROUTING_KEY =
+            "ecommerce.model.agreement.approved";
+
+    public static final String MODEL_AGREEMENT_PAYMENT_SUCCEEDED_ROUTING_KEY =
+            "ecommerce.model.agreement.payment.succeeded";
+
+    public static final String MODEL_AGREEMENT_PAYMENT_FAILED_ROUTING_KEY =
+            "ecommerce.model.agreement.payment.failed";
+
     public static final String MODEL_GIG_REQUEST_CREATED_NOTIFICATION_QUEUE =
             "stylehub.dashboard.model.gig.request.created.queue";
 
@@ -37,5 +55,23 @@ public final class RabbitMqNames {
 
     public static final String MODEL_GIG_REQUEST_REJECTED_NOTIFICATION_QUEUE =
             "stylehub.dashboard.model.gig.request.rejected.queue";
+
+    public static final String MODEL_GIG_REQUEST_CANCELLED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.model.gig.request.cancelled.queue";
+
+    public static final String MODEL_AGREEMENT_SUBMITTED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.model.agreement.submitted.queue";
+
+    public static final String MODEL_AGREEMENT_REVISION_REQUESTED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.model.agreement.revision.requested.queue";
+
+    public static final String MODEL_AGREEMENT_APPROVED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.model.agreement.approved.queue";
+
+    public static final String MODEL_AGREEMENT_PAYMENT_SUCCEEDED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.model.agreement.payment.succeeded.queue";
+
+    public static final String MODEL_AGREEMENT_PAYMENT_FAILED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.model.agreement.payment.failed.queue";
 
 }

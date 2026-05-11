@@ -47,4 +47,76 @@ public class NotificationRabbitQueues {
                 .to(exchange)
                 .with(RabbitMqNames.MODEL_GIG_REQUEST_REJECTED_ROUTING_KEY);
     }
+
+    @Bean
+    public Queue modelGigRequestCancelledNotificationQueue() {
+        return new Queue(RabbitMqNames.MODEL_GIG_REQUEST_CANCELLED_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding modelGigRequestCancelledNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(modelGigRequestCancelledNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.MODEL_GIG_REQUEST_CANCELLED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue modelAgreementSubmittedNotificationQueue() {
+        return new Queue(RabbitMqNames.MODEL_AGREEMENT_SUBMITTED_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding modelAgreementSubmittedNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(modelAgreementSubmittedNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.MODEL_AGREEMENT_SUBMITTED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue modelAgreementRevisionRequestedNotificationQueue() {
+        return new Queue(RabbitMqNames.MODEL_AGREEMENT_REVISION_REQUESTED_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding modelAgreementRevisionRequestedNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(modelAgreementRevisionRequestedNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.MODEL_AGREEMENT_REVISION_REQUESTED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue modelAgreementApprovedNotificationQueue() {
+        return new Queue(RabbitMqNames.MODEL_AGREEMENT_APPROVED_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding modelAgreementApprovedNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(modelAgreementApprovedNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.MODEL_AGREEMENT_APPROVED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue modelAgreementPaymentSucceededNotificationQueue() {
+        return new Queue(RabbitMqNames.MODEL_AGREEMENT_PAYMENT_SUCCEEDED_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding modelAgreementPaymentSucceededNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(modelAgreementPaymentSucceededNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.MODEL_AGREEMENT_PAYMENT_SUCCEEDED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue modelAgreementPaymentFailedNotificationQueue() {
+        return new Queue(RabbitMqNames.MODEL_AGREEMENT_PAYMENT_FAILED_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding modelAgreementPaymentFailedNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(modelAgreementPaymentFailedNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.MODEL_AGREEMENT_PAYMENT_FAILED_ROUTING_KEY);
+    }
 }

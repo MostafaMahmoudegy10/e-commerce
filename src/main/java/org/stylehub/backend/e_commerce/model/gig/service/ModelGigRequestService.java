@@ -18,6 +18,7 @@ import org.stylehub.backend.e_commerce.model.gig.entity.ModelAgreement;
 import org.stylehub.backend.e_commerce.model.gig.entity.ModelGigRequest;
 import org.stylehub.backend.e_commerce.model.gig.entity.RequestStatus;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestAcceptedEvent;
+import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCancelledEvent;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCreatedEvent;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestRejectedEvent;
 import org.stylehub.backend.e_commerce.model.gig.publisher.ModelGigRequestEventPublisher;
@@ -44,6 +45,7 @@ public class ModelGigRequestService {
     private final BrandService brandService;
     private final CurrentUserProvider currentUserProvider;
     private final ModelGigRequestEventPublisher modelGigRequestEventPublisher;
+    private final ModelAgreementPaymentService modelAgreementPaymentService;
 
     @Transactional
     public ModelGigRequestCreationResponse createRequest(UUID modelId, ModelGigRequestCreationRequest request) {
@@ -123,6 +125,10 @@ public class ModelGigRequestService {
         );
     }
 
+    public ModelGigRequestViewResponse findMyRequestDetails(UUID requestId) {
+        return mapToViewResponse(findOwnedRequest(requestId));
+    }
+
     public PageResponse<BrandGigRequestViewResponse> findBrandRequests(Pageable pageable, RequestStatus status) {
         Page<ModelGigRequest> page = this.modelGigRequestRepository.findAllByBrandExternalId(
                 currentUserProvider.externalId(),
@@ -143,6 +149,10 @@ public class ModelGigRequestService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    public BrandGigRequestViewResponse findBrandRequestDetails(UUID requestId) {
+        return mapToBrandViewResponse(findBrandOwnedRequest(requestId));
     }
 
     @Transactional
@@ -168,6 +178,7 @@ public class ModelGigRequestService {
         agreement.setAcceptedAt(request.getRespondedAt());
 
         ModelAgreement savedAgreement = this.modelAgreementRepository.save(agreement);
+        this.modelAgreementPaymentService.createPendingPayment(savedAgreement);
         ModelGigRequest savedRequest = this.modelGigRequestRepository.save(request);
 
         this.modelGigRequestEventPublisher.publishRequestAccepted(
@@ -197,6 +208,42 @@ public class ModelGigRequestService {
                 savedAgreement.getAgreementNumber(),
                 savedAgreement.getAgreementStatus(),
                 savedAgreement.getPaymentStatus()
+        );
+    }
+
+    @Transactional
+    public ModelGigRequestDecisionResponse cancelRequest(UUID requestId) {
+        ModelGigRequest request = findBrandOwnedRequest(requestId);
+        ensurePending(request);
+
+        request.setRequestStatus(RequestStatus.CANCELLED);
+        request.setRespondedAt(Instant.now());
+
+        ModelGigRequest savedRequest = this.modelGigRequestRepository.save(request);
+
+        this.modelGigRequestEventPublisher.publishRequestCancelled(
+                new ModelGigRequestCancelledEvent(
+                        savedRequest.getId(),
+                        savedRequest.getRequestNumber(),
+                        savedRequest.getBrand().getId(),
+                        savedRequest.getBrand().getUser().getId(),
+                        savedRequest.getBrand().getBrandName(),
+                        savedRequest.getModelProfile().getId(),
+                        savedRequest.getModelProfile().getUser().getId(),
+                        savedRequest.getRequestStatus(),
+                        savedRequest.getRespondedAt()
+                )
+        );
+
+        return new ModelGigRequestDecisionResponse(
+                savedRequest.getId(),
+                savedRequest.getRequestNumber(),
+                savedRequest.getRequestStatus(),
+                savedRequest.getRespondedAt(),
+                null,
+                null,
+                null,
+                null
         );
     }
 
@@ -270,6 +317,11 @@ public class ModelGigRequestService {
     private ModelGigRequest findOwnedRequest(UUID requestId) {
         return this.modelGigRequestRepository.findByIdAndModelExternalId(requestId, currentUserProvider.externalId())
                 .orElseThrow(() -> new IllegalArgumentException("Model gig request not found"));
+    }
+
+    private ModelGigRequest findBrandOwnedRequest(UUID requestId) {
+        return this.modelGigRequestRepository.findByIdAndBrandExternalId(requestId, currentUserProvider.externalId())
+                .orElseThrow(() -> new IllegalArgumentException("Brand gig request not found"));
     }
 
     private void ensurePending(ModelGigRequest request) {

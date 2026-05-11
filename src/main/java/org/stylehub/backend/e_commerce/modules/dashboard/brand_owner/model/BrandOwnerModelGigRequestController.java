@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.stylehub.backend.e_commerce.model.gig.dto.BrandGigRequestViewResponse;
 import org.stylehub.backend.e_commerce.model.gig.dto.ModelGigRequestCreationRequest;
 import org.stylehub.backend.e_commerce.model.gig.dto.ModelGigRequestCreationResponse;
+import org.stylehub.backend.e_commerce.model.gig.dto.ModelGigRequestDecisionResponse;
 import org.stylehub.backend.e_commerce.model.gig.entity.RequestStatus;
 import org.stylehub.backend.e_commerce.model.gig.service.ModelGigRequestService;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
@@ -37,11 +38,21 @@ public class BrandOwnerModelGigRequestController {
         return ResponseEntity.ok(this.modelGigRequestService.findBrandRequests(pageable, status));
     }
 
+    @GetMapping("/requests/{requestId}")
+    public ResponseEntity<BrandGigRequestViewResponse> findBrandRequestDetails(@PathVariable UUID requestId) {
+        return ResponseEntity.ok(this.modelGigRequestService.findBrandRequestDetails(requestId));
+    }
+
     @PostMapping("/{modelId}/requests")
     public ResponseEntity<ModelGigRequestCreationResponse> createRequest(
             @PathVariable UUID modelId,
             @RequestBody ModelGigRequestCreationRequest request
     ) {
         return ResponseEntity.ok(this.modelGigRequestService.createRequest(modelId, request));
+    }
+
+    @PostMapping("/requests/{requestId}/cancel")
+    public ResponseEntity<ModelGigRequestDecisionResponse> cancelRequest(@PathVariable UUID requestId) {
+        return ResponseEntity.ok(this.modelGigRequestService.cancelRequest(requestId));
     }
 }

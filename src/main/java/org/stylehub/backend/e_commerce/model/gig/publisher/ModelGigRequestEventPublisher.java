@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestAcceptedEvent;
+import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCancelledEvent;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCreatedEvent;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestRejectedEvent;
 import org.stylehub.backend.e_commerce.platform.config.rabbitmq.RabbitMqNames;
@@ -41,6 +42,15 @@ public class ModelGigRequestEventPublisher {
         rabbitTemplate.convertAndSend(
                 RabbitMqNames.ECOMMERCE_EVENTS_EXCHANGE,
                 RabbitMqNames.MODEL_GIG_REQUEST_REJECTED_ROUTING_KEY,
+                event
+        );
+    }
+
+    public void publishRequestCancelled(ModelGigRequestCancelledEvent event) {
+        LOGGER.info("Publishing model gig request cancelled event for requestId={}", event.requestId());
+        rabbitTemplate.convertAndSend(
+                RabbitMqNames.ECOMMERCE_EVENTS_EXCHANGE,
+                RabbitMqNames.MODEL_GIG_REQUEST_CANCELLED_ROUTING_KEY,
                 event
         );
     }

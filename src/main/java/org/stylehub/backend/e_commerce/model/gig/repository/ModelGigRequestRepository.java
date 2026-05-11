@@ -70,4 +70,16 @@ public interface ModelGigRequestRepository extends JpaRepository<ModelGigRequest
               and r.modelProfile.user.externalUserId = :externalId
             """)
     Optional<ModelGigRequest> findByIdAndModelExternalId(@Param("requestId") UUID requestId, @Param("externalId") String externalId);
+
+    @Query("""
+            select r
+            from ModelGigRequest r
+            join fetch r.brand b
+            join fetch b.user
+            join fetch r.modelProfile mp
+            join fetch mp.user
+            where r.id = :requestId
+              and r.brand.user.externalUserId = :externalId
+            """)
+    Optional<ModelGigRequest> findByIdAndBrandExternalId(@Param("requestId") UUID requestId, @Param("externalId") String externalId);
 }

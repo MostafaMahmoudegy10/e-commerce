@@ -31,6 +31,11 @@ public class ModelGigRequestController {
         return ResponseEntity.ok(this.modelGigRequestService.findMyRequests(pageable,status));
     }
 
+    @GetMapping("/{requestId}")
+    public ResponseEntity<ModelGigRequestViewResponse> findMyRequestDetails(@PathVariable UUID requestId) {
+        return ResponseEntity.ok(this.modelGigRequestService.findMyRequestDetails(requestId));
+    }
+
     @PostMapping("/{requestId}/accept")
     public ResponseEntity<ModelGigRequestDecisionResponse> acceptRequest(@PathVariable UUID requestId) {
         return ResponseEntity.ok(this.modelGigRequestService.acceptRequest(requestId));

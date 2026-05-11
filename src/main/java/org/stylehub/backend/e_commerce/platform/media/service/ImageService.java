@@ -30,6 +30,11 @@ public class ImageService {
     }
 
     @Async("imageTaskExecutor")
+    public CompletableFuture<UploadResponse> uploadAssetAsync(MultipartFile file, String folder) {
+        return CompletableFuture.completedFuture(uploadAssetInternal(file, folder));
+    }
+
+    @Async("imageTaskExecutor")
     public CompletableFuture<Void> deleteImageAsync(String publicId) {
         deleteImageInternal(publicId);
         return CompletableFuture.completedFuture(null);
@@ -50,12 +55,23 @@ public class ImageService {
         return CompletableFuture.completedFuture(null);
     }
 
+    @Async("imageTaskExecutor")
+    public CompletableFuture<Void> deleteAssetAsync(String publicId, String resourceType) {
+        deleteAssetInternal(publicId, resourceType);
+        return CompletableFuture.completedFuture(null);
+    }
+
     private UploadResponse uploadImageInternal(MultipartFile file) {
+        return uploadAssetInternal(file, PRODUCTS_FOLDER);
+    }
+
+    private UploadResponse uploadAssetInternal(MultipartFile file, String folder) {
         try {
             Map uploadResults = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(
-                            "folder", PRODUCTS_FOLDER
+                            "folder", folder,
+                            "resource_type", "auto"
                     )
             );
             return new UploadResponse(
@@ -68,10 +84,17 @@ public class ImageService {
     }
 
     private void deleteImageInternal(String publicId) {
+        deleteAssetInternal(publicId, "image");
+    }
+
+    private void deleteAssetInternal(String publicId, String resourceType) {
         try {
             cloudinary.uploader().destroy(
                     publicId,
-                    ObjectUtils.asMap("invalidate", true)
+                    ObjectUtils.asMap(
+                            "invalidate", true,
+                            "resource_type", resourceType
+                    )
             );
         } catch (IOException e) {
             throw new IllegalArgumentException("the file is not presented " + e.getMessage());
