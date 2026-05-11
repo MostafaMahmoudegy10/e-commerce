@@ -79,7 +79,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
                            else p.price
                        end
                    )
-               ) 
+               )
                 from Product p
                 join p.category c
                 left join ProductColor pc on pc.product = p
