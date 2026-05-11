@@ -20,5 +20,22 @@ public final class RabbitMqNames {
     public static final String ORDER_CREATED_ROUTING_KEY =
             "ecommerce.order.created";
 
+    public static final String MODEL_GIG_REQUEST_CREATED_ROUTING_KEY =
+            "ecommerce.model.gig.request.created";
+
+    public static final String MODEL_GIG_REQUEST_ACCEPTED_ROUTING_KEY =
+            "ecommerce.model.gig.request.accepted";
+
+    public static final String MODEL_GIG_REQUEST_REJECTED_ROUTING_KEY =
+            "ecommerce.model.gig.request.rejected";
+
+    public static final String MODEL_GIG_REQUEST_CREATED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.model.gig.request.created.queue";
+
+    public static final String MODEL_GIG_REQUEST_ACCEPTED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.model.gig.request.accepted.queue";
+
+    public static final String MODEL_GIG_REQUEST_REJECTED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.model.gig.request.rejected.queue";
 
 }
