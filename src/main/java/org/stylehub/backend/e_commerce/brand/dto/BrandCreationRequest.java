@@ -6,6 +6,7 @@ public record BrandCreationRequest(
         String username,
         String bio,
         String websiteUrl,
-        String email
+        String email,
+        String profileImageUrl
 ) {
 }

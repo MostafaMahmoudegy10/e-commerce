@@ -8,9 +8,9 @@ public record CustomerProfileSetupRequest(
         String firstName,
         String lastName,
         String phoneNumber,
-        String email
-//        String bio,
-//        Character gender,
-//        String profileImageUrl
+        String email,
+        String bio,
+        Character gender,
+        String profileImageUrl
 ) {
 }

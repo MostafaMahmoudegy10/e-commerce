@@ -53,7 +53,7 @@ public class BrandService {
         brand.setBrandName(brandCreationRequest.brandName());
         brand.setBrandEmail(user.getEmail());
         brand.setDescription(brandCreationRequest.bio());
-        brand.setBrandImageUrl(brandCreationRequest.websiteUrl());
+        brand.setBrandImageUrl(brandCreationRequest.profileImageUrl());
         brand.setUser(user);
 
         this.brandRepository.save(brand);

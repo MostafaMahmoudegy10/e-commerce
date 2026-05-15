@@ -66,9 +66,9 @@ public class CustomerProfileService {
         profile.setFirstName(request.firstName());
         profile.setLastName(request.lastName());
         profile.setPhoneNumber(request.phoneNumber());
-        profile.setBio("no bio");
-        profile.setGender(Gender.fromCode('M'));
-        profile.setProfileImageUrl("image.jpg");
+        profile.setBio(request.bio());
+        profile.setGender(Gender.fromCode(request.gender()));
+        profile.setProfileImageUrl(request.profileImageUrl());
         profile.setCustomerEmail(request.email());
 
         customerProfileRepository.save(profile);
