@@ -34,4 +34,6 @@ public interface ProductRatingRepository extends JpaRepository<ProductRating, UU
    where pr.product.id = :productId
 """)
     CalculateSummaryDto calculateSummary(@Param("productId") UUID productId);
+
+    void deleteAllByProduct_Id(UUID productId);
 }

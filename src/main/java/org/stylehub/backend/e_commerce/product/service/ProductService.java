@@ -10,6 +10,9 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.service.BrandService;
+import org.stylehub.backend.e_commerce.cart.item.repository.CartItemRepository;
+import org.stylehub.backend.e_commerce.customer.rating.product_rating.repository.ProductRatingRepository;
+import org.stylehub.backend.e_commerce.customer.rating.product_rating_summary.repository.ProductRatingSummaryRepository;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.ProductPatchRequest;
@@ -27,6 +30,7 @@ import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
+import org.stylehub.backend.e_commerce.order.item.repoistory.OrderItemRepository;
 import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
 import org.stylehub.backend.e_commerce.product.color.repository.ProductColorRepository;
 import org.stylehub.backend.e_commerce.product.color.variant.repository.ProductVariantRepository;
@@ -54,6 +58,10 @@ public class ProductService {
     private final ProductVariantRepository productVariantRepository;
     private final FavouriteRepository favouriteRepository;
     private final ProductColorImagesRepo productColorImagesRepo;
+    private final CartItemRepository cartItemRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final ProductRatingRepository productRatingRepository;
+    private final ProductRatingSummaryRepository productRatingSummaryRepository;
 
     @Transactional
     public ProductCreationResponse addNewProduct(ProductCreationRequest request) {
@@ -147,10 +155,18 @@ public class ProductService {
     public void deleteBrandProduct(UUID productId) {
         String brandId = getCurrentBrand();
         Product product = findProductForBrand(productId, brandId);
+
+        if (this.orderItemRepository.existsByVariant_ProductColor_Product_Id(product.getId())) {
+            throw new IllegalStateException("This product cannot be deleted because it is already used in order history");
+        }
+
+        this.cartItemRepository.deleteAllByProductVariant_ProductColor_Product_Id(product.getId());
+        this.productRatingRepository.deleteAllByProduct_Id(product.getId());
+        this.productRatingSummaryRepository.deleteAllByProduct_Id(product.getId());
         deleteProductColorsTree(product, brandId);
         this.favouriteRepository.deleteByProduct_Id(product.getId());
-        safelyDeleteProductThumbnail(product.getPublicId());
         this.productRepository.delete(product);
+        scheduleProductThumbnailDeletionAfterCommit(product.getPublicId());
     }
     public  Product findProductById(UUID productId,String externalUserId) {
         return this.productRepository.findProductByIdAndBrand_User_ExternalUserId(productId,externalUserId)
@@ -196,6 +212,24 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("""
                         product You Requested Not Present For Your Brand Please Add It First And Try Again
                         """));
+    }
+
+    private void scheduleProductThumbnailDeletionAfterCommit(String publicId) {
+        if (publicId == null || publicId.isBlank()) {
+            return;
+        }
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    imageService.deleteImageAsync(publicId);
+                }
+            });
+            return;
+        }
+
+        this.imageService.deleteImageAsync(publicId);
     }
 
     private void safelyDeleteProductThumbnail(String publicId) {

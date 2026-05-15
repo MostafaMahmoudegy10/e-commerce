@@ -50,4 +50,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> {
             @Param("productId") UUID productId,
             @Param("orderStatus") OrderStatus orderStatus
     );
+
+    boolean existsByVariant_ProductColor_Product_Id(UUID productId);
+
+    boolean existsByVariant_ProductColor_Id(UUID productColorId);
 }

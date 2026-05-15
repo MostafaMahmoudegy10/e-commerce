@@ -9,8 +9,15 @@ public record AuthenticatedUser(
         UUID userId,
         String externalId,
         String email,
+        String role,
         Set<String> roles,
-        Boolean isProfileCompleted
+        Boolean isProfileCompleted,
+        Boolean hasBrandProfile,
+        Boolean hasCustomerProfile,
+        Boolean hasModelProfile,
+        Boolean canAccessBrandDashboard,
+        Boolean canAccessModelDashboard,
+        String defaultDashboard
         ) {
 
 

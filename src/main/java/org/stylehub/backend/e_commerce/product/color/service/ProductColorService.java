@@ -11,6 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.ProductColorCreationRequest;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.ProductColorDeleteResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.BrandProductColorViewResponse;
+import org.stylehub.backend.e_commerce.cart.item.repository.CartItemRepository;
+import org.stylehub.backend.e_commerce.order.item.repoistory.OrderItemRepository;
 import org.stylehub.backend.e_commerce.platform.media.ProductColorImagesRepo;
 import org.stylehub.backend.e_commerce.platform.media.entity.ProductColorImages;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
@@ -39,6 +41,8 @@ public class ProductColorService {
     private final ImageService imageService;
     private final ProductColorImagesRepo productColorImagesRepo;
     private final ProductVariantRepository productVariantRepository;
+    private final CartItemRepository cartItemRepository;
+    private final OrderItemRepository orderItemRepository;
 
 
     @Transactional
@@ -88,10 +92,15 @@ public class ProductColorService {
                 brandExternalUserId
         );
 
+        if (this.orderItemRepository.existsByVariant_ProductColor_Id(colorId)) {
+            throw new IllegalStateException("This color cannot be deleted because it is already used in order history");
+        }
+
         List<ProductColorImages> colorImages = productColorImagesRepo.findAllByProductColor_Id(colorId);
         List<String> publicIds = colorImages.stream().map(ProductColorImages::getPublicId).toList();
 
         int variantCount = productVariantRepository.findAllByProductColor_Id(colorId).size();
+        this.cartItemRepository.deleteAllByProductVariant_ProductColor_Id(colorId);
         productVariantRepository.deleteAllByProductColor_Id(colorId);
         LOGGER.info("Deleted variants for colorId={}, count={}", colorId, variantCount);
 
@@ -100,15 +109,7 @@ public class ProductColorService {
 
         productColorRepository.delete(productColor);
 
-        if (TransactionSynchronizationManager.isSynchronizationActive() && !publicIds.isEmpty()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    imageService.deleteImagesAsync(publicIds);
-                    LOGGER.info("Cloudinary image deletion scheduled after commit for colorId={}, count={}", colorId, publicIds.size());
-                }
-            });
-        }
+        scheduleImageDeletionAfterCommit(publicIds, "colorId=" + colorId);
 
         return new ProductColorDeleteResponse("Product color deleted successfully", productId, colorId);
     }

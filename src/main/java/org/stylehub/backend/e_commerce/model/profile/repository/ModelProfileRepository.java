@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface ModelProfileRepository extends JpaRepository<ModelProfile, UUID> {
     Optional<ModelProfile> findModelProfileByUser_Id(UUID id);
+    boolean existsByUser_Id(UUID id);
 }

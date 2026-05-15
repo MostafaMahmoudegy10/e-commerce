@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface ProductRatingSummaryRepository extends JpaRepository<ProductRatingSummary, UUID> {
     Optional<ProductRatingSummary> findProductRatingSummariesByProduct_Id(UUID id);
 
+    void deleteAllByProduct_Id(UUID productId);
+
     @Query("""
         select ps.avgRating from ProductRatingSummary ps
         join ps.product p

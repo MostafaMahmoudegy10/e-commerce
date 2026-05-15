@@ -48,6 +48,8 @@ public interface CategoryRepository extends JpaRepository<Category,UUID> {
             @Param("externalUserId") String externalId
     );
 
+    boolean existsByParentCategory_Id(UUID parentCategoryId);
+
 
 
 }

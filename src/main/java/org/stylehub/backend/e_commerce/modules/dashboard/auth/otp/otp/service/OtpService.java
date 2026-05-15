@@ -3,6 +3,7 @@ package org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.stylehub.backend.e_commerce.modules.dashboard.auth.DashboardAuthContextService;
 import org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.dto.*;
 import org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.entity.Otp;
 import org.stylehub.backend.e_commerce.modules.dashboard.auth.otp.otp.repository.OtpRepository;
@@ -32,6 +33,7 @@ public class OtpService {
     private final OtpTemplateService otpTemplateService;
     private final EmailService emailService;
     private final DashboardTokenService dashboardTokenService;
+    private final DashboardAuthContextService dashboardAuthContextService;
 
     @Transactional
     public GenerateOtpResponse generateOtp(GenerateOtpRequest generateOtpRequest){
@@ -42,10 +44,12 @@ public class OtpService {
         User user =this.userRepository.findByEmail(generateOtpRequest.email())
                 .orElseThrow(()-> new IllegalArgumentException("User not found"));
 
+        String recipient = normalizeRecipient(generateOtpRequest.recipient(), user.getEmail());
+
         // because he ask for another otp
         // find the top used otp for the recipient and purpose then filter if he is valid not
         // consumed and not expired then  make it consumed and save it
-        otpRepository.findTopByRecipientAndPurposeOrderByCreatedAtDesc(generateOtpRequest.recipient(),
+        otpRepository.findTopByRecipientAndPurposeOrderByCreatedAtDesc(recipient,
                 generateOtpRequest.purpose())
                 .filter(existingOtp->!existingOtp.isExpired()&&!existingOtp.isConsumed())
                 .ifPresent(otp->{
@@ -57,7 +61,7 @@ public class OtpService {
 
         Otp newOtp = new Otp();
         newOtp.setOtpHash(hashOtp(otp));
-        newOtp.setRecipient(generateOtpRequest.recipient());
+        newOtp.setRecipient(recipient);
         newOtp.setPurpose(generateOtpRequest.purpose());
         newOtp.setUser(user);
         newOtp.setChannel(generateOtpRequest.channel());
@@ -67,9 +71,9 @@ public class OtpService {
         Otp savedOtp= otpRepository.save(newOtp);
 
         String emailHtml=this.otpTemplateService.buildOtpEmailTemplate(
-                generateOtpRequest.recipient(),otp,expiryMinutes
+                recipient,otp,expiryMinutes
         );
-        emailService.sendHtmlEmail(generateOtpRequest.recipient(),"Your StyleHub verification code",
+        emailService.sendHtmlEmail(recipient,"Your StyleHub verification code",
                 emailHtml);
 
         return new GenerateOtpResponse(
@@ -98,14 +102,16 @@ public class OtpService {
        String inComingHash=hashOtp(verifyOtpRequest.otpCode());
 
        if(inComingHash.equals(otp.getOtpHash())){
-           otp.consume();
+          otp.consume();
           otpRepository.save(otp);
           DashboardTokenService.TokenPair tokenPair = dashboardTokenService.generateTokenPair(otp.getUser());
+          var authenticatedUser = this.dashboardAuthContextService.build(otp.getUser());
            return new VerifyOtpResponse(true,
                    "OTP verified",
                    otp.getMaxAttempts()-otp.getAttemptCount(),
                    tokenPair.accessToken(),
-                   tokenPair.refreshToken());
+                   tokenPair.refreshToken(),
+                   authenticatedUser);
        }
        otp.recordFailedAttempt();
        otpRepository.save(otp);
@@ -120,17 +126,30 @@ public class OtpService {
         }
 
         DashboardTokenService.TokenPair tokenPair = dashboardTokenService.refresh(request.refreshToken());
-        return new RefreshTokenResponse(tokenPair.accessToken(), tokenPair.refreshToken());
+        var refreshedUser = this.dashboardAuthContextService.buildByExternalId(
+                this.dashboardTokenService.extractSubject(request.refreshToken())
+        );
+        return new RefreshTokenResponse(tokenPair.accessToken(), tokenPair.refreshToken(), refreshedUser);
+    }
+
+    private String normalizeRecipient(String recipient, String userEmail) {
+        if (recipient == null || recipient.isBlank()) {
+            return userEmail;
+        }
+        if (!recipient.equalsIgnoreCase(userEmail)) {
+            throw new IllegalArgumentException("Recipient must match the user email");
+        }
+        return userEmail;
     }
 
     private void validateVerifiedOtpRequest(VerifyOtpRequest verifyOtpRequest) {
-        if(verifyOtpRequest.otpCode()==null){
+        if(verifyOtpRequest.otpCode()==null || verifyOtpRequest.otpCode().isBlank()){
             throw new IllegalArgumentException("OTP code is required");
         }
         if(verifyOtpRequest.purpose()==null){
             throw new IllegalArgumentException("Purpose code is required");
         }
-        if(verifyOtpRequest.recipient()==null){
+        if(verifyOtpRequest.recipient()==null || verifyOtpRequest.recipient().isBlank()){
             throw new IllegalArgumentException("Recipient code is required");
         }
     }
@@ -161,14 +180,11 @@ public class OtpService {
     }
 
     private void validateGenrateRequest(GenerateOtpRequest generateOtpRequest) {
-        if(generateOtpRequest.email()==null){
+        if(generateOtpRequest.email()==null || generateOtpRequest.email().isBlank()){
             throw new IllegalArgumentException("email is required");
         }
         if(generateOtpRequest.channel()==null){
             throw new IllegalArgumentException("channel is required");
-        }
-        if(generateOtpRequest.recipient()==null){
-            throw new IllegalArgumentException("recipient is required");
         }
         if(generateOtpRequest.purpose()==null){
             throw new IllegalArgumentException("purpose is required");

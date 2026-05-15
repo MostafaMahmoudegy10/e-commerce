@@ -111,4 +111,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             @Param("brandId") UUID brandId,
             Pageable pageable
     );
+
+    boolean existsByCategory_Id(UUID categoryId);
 }

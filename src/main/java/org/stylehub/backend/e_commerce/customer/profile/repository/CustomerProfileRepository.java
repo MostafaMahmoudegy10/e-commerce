@@ -10,6 +10,7 @@ public interface CustomerProfileRepository extends JpaRepository<CustomerProfile
     Optional<CustomerProfile> findCustomerProfileByUser_ExternalUserId(String userExternalUserId);
     Optional<CustomerProfile> findByUsername(String username);
     boolean existsByUsernameAndUser_ExternalUserIdNot(String username, String externalUserId);
+    boolean existsByUser_ExternalUserId(String userExternalUserId);
 
     void deleteByUser_ExternalUserId(String userExternalUserId);
 }

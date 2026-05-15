@@ -55,4 +55,8 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
         where ci.cart.id=:cartId 
                 """)
     BigDecimal findTotalPriceByCartId(UUID cartId);
+
+    void deleteAllByProductVariant_ProductColor_Product_Id(UUID productId);
+
+    void deleteAllByProductVariant_ProductColor_Id(UUID productColorId);
 }

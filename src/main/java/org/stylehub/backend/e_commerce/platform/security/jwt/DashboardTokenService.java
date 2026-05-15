@@ -3,13 +3,13 @@ package org.stylehub.backend.e_commerce.platform.security.jwt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
-import org.stylehub.backend.e_commerce.brand.repository.BrandRepository;
+import org.stylehub.backend.e_commerce.modules.dashboard.auth.DashboardAuthContextService;
+import org.stylehub.backend.e_commerce.platform.security.current_user.dto.AuthenticatedUser;
 import org.stylehub.backend.e_commerce.user.entity.User;
 import org.stylehub.backend.e_commerce.user.repository.UserRepository;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +26,12 @@ public class DashboardTokenService {
     private final AppJwtProperties  appJwtProperties;
 
     private final UserRepository userRepository;
+    private final DashboardAuthContextService dashboardAuthContextService;
 
     public TokenPair generateTokenPair(User user){
-        String role = (userRepository.existsById(user.getId()) ? user.getRole().toString():null);
-
         return new TokenPair(
-                createToken(user,role,"access",ACCESS_TOKEN_SECONDS),
-                createToken(user,role,"refresh",REFRESH_TOKEN_SECONDS)
+                createToken(user,"access",ACCESS_TOKEN_SECONDS),
+                createToken(user,"refresh",REFRESH_TOKEN_SECONDS)
         );
 
     }
@@ -40,37 +39,40 @@ public class DashboardTokenService {
         Jwt jwt =jwtDecoder.decode(refreshToken);
 
         String tokenType=jwt.getClaimAsString("token_type");
-        if (!tokenType.equals("refresh")) {
+        if (!"refresh".equals(tokenType)) {
             throw new IllegalArgumentException("Provided token is not a refresh token");
         }
-        // get the claims and return token pair
-        String subject =jwt.getClaimAsString("subject");
-        String email =jwt.getClaimAsString("email");
-        String role =jwt.getClaimAsString("role");
 
-        return new TokenPair(
-                createToken(subject,email,role,"access",ACCESS_TOKEN_SECONDS),
-                createToken(subject,email,role,"refresh",REFRESH_TOKEN_SECONDS)
-        );
+        String subject = jwt.getSubject();
+        User user = this.userRepository.findByExternalUserId(subject)
+                .orElseThrow(() -> new IllegalArgumentException("User not found for refresh token"));
+        return generateTokenPair(user);
     }
 
-    private String createToken(User user, String role, String tokenType, long seconds) {
-        return createToken(user.getExternalUserId(), user.getEmail(), role, tokenType, seconds);
+    public String extractSubject(String token) {
+        return this.jwtDecoder.decode(token).getSubject();
     }
 
-    private String createToken(String subject, String email,
-                               String role, String tokenType, long seconds) {
-
+    private String createToken(User user, String tokenType, long seconds) {
         Instant instant=Instant.now();
+        AuthenticatedUser authenticatedUser = this.dashboardAuthContextService.build(user);
         JwtClaimsSet jwtClaimsSet= JwtClaimsSet.builder()
-                .subject(subject)
+                .subject(user.getExternalUserId())
                 .issuedAt(instant)
                 .expiresAt(instant.plusSeconds(seconds))
                 .issuer(appJwtProperties.issuer())
                 .audience(List.of(appJwtProperties.audience()))
-                .claim("email",email)
-                .claim("role",role)
+                .claim("email",user.getEmail())
+                .claim("role",authenticatedUser.role())
+                .claim("roles", List.copyOf(authenticatedUser.roles()))
                 .claim("token_type",tokenType)
+                .claim("isProfileCompleted", authenticatedUser.isProfileCompleted())
+                .claim("hasBrandProfile", authenticatedUser.hasBrandProfile())
+                .claim("hasCustomerProfile", authenticatedUser.hasCustomerProfile())
+                .claim("hasModelProfile", authenticatedUser.hasModelProfile())
+                .claim("canAccessBrandDashboard", authenticatedUser.canAccessBrandDashboard())
+                .claim("canAccessModelDashboard", authenticatedUser.canAccessModelDashboard())
+                .claim("defaultDashboard", authenticatedUser.defaultDashboard())
                 .build();
         return jwtEncoder.encode(JwtEncoderParameters.from(jwtClaimsSet))
                 .getTokenValue();

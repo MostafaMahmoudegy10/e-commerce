@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.repository.BrandRepository;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.*;
@@ -20,6 +22,7 @@ import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
+import org.stylehub.backend.e_commerce.product.repository.ProductRepository;
 import org.stylehub.backend.e_commerce.user.entity.User;
 import org.stylehub.backend.e_commerce.user.entity.enums.Gender;
 import org.stylehub.backend.e_commerce.user.repository.UserRepository;
@@ -38,6 +41,7 @@ public class CategoryService {
     private CurrentUserProvider currentUserProvider;
     private ImageService imageService;
     private BrandCatalogCategoryQueryRepository brandCatalogCategoryQueryRepository;
+    private ProductRepository productRepository;
 
     private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
 
@@ -141,8 +145,17 @@ public class CategoryService {
                this.categoryRepository.findCategoryByIdAndBrand_User_ExternalUserId(categoryId,externalUserId)
                .orElseThrow(()->new IllegalArgumentException("Category You Requested Not Present " +
                                "For Your Brand Please Add It First And Try Again "));
-       safelyDeleteCategoryIcon(category.getPublicId());
+
+       if (this.categoryRepository.existsByParentCategory_Id(categoryId)) {
+           throw new IllegalStateException("This category cannot be deleted because it still has subcategories");
+       }
+
+       if (this.productRepository.existsByCategory_Id(categoryId)) {
+           throw new IllegalStateException("This category cannot be deleted because it still has products");
+       }
+
        this.categoryRepository.deleteById(categoryId);
+       scheduleCategoryIconDeletionAfterCommit(category.getPublicId());
     }
 
     @Transactional
@@ -185,6 +198,24 @@ public class CategoryService {
             category.setCategoryDescriptionAr(patchRequest.categoryDescriptionAr());
         }
         return category;
+    }
+
+    private void scheduleCategoryIconDeletionAfterCommit(String publicId) {
+        if (publicId == null || publicId.isBlank()) {
+            return;
+        }
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    imageService.deleteImageAsync(publicId);
+                }
+            });
+            return;
+        }
+
+        this.imageService.deleteImageAsync(publicId);
     }
 
     private void safelyDeleteCategoryIcon(String publicId) {
