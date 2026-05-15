@@ -15,6 +15,7 @@ import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCancelledE
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCreatedEvent;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestRejectedEvent;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationFilterRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationReadAllResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationStatsResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationTypeCountResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationTypeCountRow;
@@ -22,6 +23,9 @@ import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.Dashbo
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.entity.DashboardNotification;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.entity.DashboardNotificationType;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.repository.DashboardNotificationRepository;
+import org.stylehub.backend.e_commerce.order.event.InventoryLowStockEvent;
+import org.stylehub.backend.e_commerce.order.event.OrderCreationEvent;
+import org.stylehub.backend.e_commerce.order.event.OrderLifecycleEvent;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.user.entity.User;
@@ -89,6 +93,94 @@ public class DashboardNotificationService {
         }
 
         return mapToViewResponse(notification);
+    }
+
+    @Transactional
+    public DashboardNotificationReadAllResponse markAllAsRead() {
+        UUID userId = currentUserProvider.getUserId();
+        List<DashboardNotification> unreadNotifications =
+                this.dashboardNotificationRepository.findAllByRecipientUser_IdAndReadAtIsNull(userId);
+
+        Instant now = Instant.now();
+        unreadNotifications.forEach(notification -> notification.setReadAt(now));
+        this.dashboardNotificationRepository.saveAll(unreadNotifications);
+
+        return new DashboardNotificationReadAllResponse(
+                unreadNotifications.size(),
+                this.dashboardNotificationRepository.countByRecipientUser_Id(userId),
+                this.dashboardNotificationRepository.countByRecipientUser_IdAndReadAtIsNull(userId),
+                this.dashboardNotificationRepository.countByRecipientUser_IdAndReadAtIsNotNull(userId)
+        );
+    }
+
+    @Transactional
+    public void createNotificationForOrderCreated(OrderCreationEvent event) {
+        DashboardNotification notification = new DashboardNotification();
+        notification.setRecipientUser(findUser(event.brandUserId()));
+        notification.setType(DashboardNotificationType.ORDER);
+        notification.setTitle("New order received");
+        notification.setMessage("Order " + event.orderNumber() + " was created by " + event.customerEmail() + ".");
+        notification.setReferenceType("ORDER");
+        notification.setReferenceId(event.orderId());
+        notification.setReferenceCode(event.orderNumber());
+        notification.setActionUrl(null);
+        this.dashboardNotificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotificationForOrderPaid(OrderLifecycleEvent event) {
+        DashboardNotification notification = new DashboardNotification();
+        notification.setRecipientUser(findUser(event.brandUserId()));
+        notification.setType(DashboardNotificationType.PAYMENT);
+        notification.setTitle("Payment received");
+        notification.setMessage("Payment for order " + event.orderNumber() + " was completed successfully.");
+        notification.setReferenceType("ORDER_PAYMENT");
+        notification.setReferenceId(event.orderId());
+        notification.setReferenceCode(event.orderNumber());
+        notification.setActionUrl(null);
+        this.dashboardNotificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotificationForOrderShipped(OrderLifecycleEvent event) {
+        DashboardNotification notification = new DashboardNotification();
+        notification.setRecipientUser(findUser(event.brandUserId()));
+        notification.setType(DashboardNotificationType.ORDER);
+        notification.setTitle("Order shipped");
+        notification.setMessage("Order " + event.orderNumber() + " moved to shipped and is now on the way to the customer.");
+        notification.setReferenceType("ORDER");
+        notification.setReferenceId(event.orderId());
+        notification.setReferenceCode(event.orderNumber());
+        notification.setActionUrl(null);
+        this.dashboardNotificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotificationForOrderDelivered(OrderLifecycleEvent event) {
+        DashboardNotification notification = new DashboardNotification();
+        notification.setRecipientUser(findUser(event.brandUserId()));
+        notification.setType(DashboardNotificationType.ORDER);
+        notification.setTitle("Order delivered");
+        notification.setMessage("Order " + event.orderNumber() + " was marked as delivered.");
+        notification.setReferenceType("ORDER");
+        notification.setReferenceId(event.orderId());
+        notification.setReferenceCode(event.orderNumber());
+        notification.setActionUrl(null);
+        this.dashboardNotificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotificationForInventoryLowStock(InventoryLowStockEvent event) {
+        DashboardNotification notification = new DashboardNotification();
+        notification.setRecipientUser(findUser(event.brandUserId()));
+        notification.setType(DashboardNotificationType.INVENTORY);
+        notification.setTitle("Low stock on " + event.productName());
+        notification.setMessage("SKU " + event.sku() + " dropped to " + event.remainingStock() + " units.");
+        notification.setReferenceType("PRODUCT");
+        notification.setReferenceId(event.productId());
+        notification.setReferenceCode(event.sku());
+        notification.setActionUrl(null);
+        this.dashboardNotificationRepository.save(notification);
     }
 
     @Transactional
