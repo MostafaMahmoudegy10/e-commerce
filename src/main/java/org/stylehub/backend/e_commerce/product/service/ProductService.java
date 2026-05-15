@@ -6,6 +6,8 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.service.BrandService;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
@@ -19,10 +21,13 @@ import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.repository.BrandCatalogProductQueryRepository;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.home.dto.BrandDashboardProductStockRow;
 import org.stylehub.backend.e_commerce.favourite.repository.FavouriteRepository;
+import org.stylehub.backend.e_commerce.platform.media.ProductColorImagesRepo;
+import org.stylehub.backend.e_commerce.platform.media.entity.ProductColorImages;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
+import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
 import org.stylehub.backend.e_commerce.product.color.repository.ProductColorRepository;
 import org.stylehub.backend.e_commerce.product.color.variant.repository.ProductVariantRepository;
 import org.stylehub.backend.e_commerce.product.dto.ProductCreationRequest;
@@ -48,6 +53,7 @@ public class ProductService {
     private final ProductColorRepository productColorRepository;
     private final ProductVariantRepository productVariantRepository;
     private final FavouriteRepository favouriteRepository;
+    private final ProductColorImagesRepo productColorImagesRepo;
 
     @Transactional
     public ProductCreationResponse addNewProduct(ProductCreationRequest request) {
@@ -141,6 +147,7 @@ public class ProductService {
     public void deleteBrandProduct(UUID productId) {
         String brandId = getCurrentBrand();
         Product product = findProductForBrand(productId, brandId);
+        deleteProductColorsTree(product, brandId);
         this.favouriteRepository.deleteByProduct_Id(product.getId());
         safelyDeleteProductThumbnail(product.getPublicId());
         this.productRepository.delete(product);
@@ -196,6 +203,47 @@ public class ProductService {
             return;
         }
         this.imageService.deleteImageAsync(publicId);
+    }
+
+    private void deleteProductColorsTree(Product product, String brandId) {
+        List<ProductColor> productColors = this.productColorRepository
+                .findAllByProduct_IdAndProduct_Brand_User_ExternalUserId(product.getId(), brandId);
+
+        if (productColors.isEmpty()) {
+            return;
+        }
+
+        List<String> colorImagePublicIds = productColors.stream()
+                .flatMap(productColor -> this.productColorImagesRepo.findAllByProductColor_Id(productColor.getId()).stream())
+                .map(ProductColorImages::getPublicId)
+                .toList();
+
+        productColors.forEach(productColor -> {
+            this.productVariantRepository.deleteAllByProductColor_Id(productColor.getId());
+            this.productColorImagesRepo.deleteAllByProductColor_Id(productColor.getId());
+        });
+
+        this.productColorRepository.deleteAll(productColors);
+
+        scheduleColorImageDeletionAfterCommit(colorImagePublicIds);
+    }
+
+    private void scheduleColorImageDeletionAfterCommit(List<String> publicIds) {
+        if (publicIds == null || publicIds.isEmpty()) {
+            return;
+        }
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    imageService.deleteImagesAsync(publicIds);
+                }
+            });
+            return;
+        }
+
+        this.imageService.deleteImagesAsync(publicIds);
     }
 
     private String getCurrentBrand() {
