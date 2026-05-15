@@ -5,15 +5,24 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.stylehub.backend.e_commerce.modules.catalog.category.CategoryService;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryCreateRequest;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryPatchRequest;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.CategoryResponse;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.category.BrandCategoryFilterRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.category.BrandCategoryStatsResponse;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.category.BrandCategoryViewResponse;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -31,6 +40,19 @@ public class BrandOwnerCategoryController {
 
         CategoryResponse response = this.categoryService.addNewCategory(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<PageResponse<BrandCategoryViewResponse>> findBrandCategories(
+            @ModelAttribute BrandCategoryFilterRequest filter,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ResponseEntity.ok(this.categoryService.findBrandCategories(filter, pageable));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<BrandCategoryStatsResponse> findBrandCategoryStats() {
+        return ResponseEntity.ok(this.categoryService.getBrandCategoryStats());
     }
 
     @DeleteMapping("{categoryId}")

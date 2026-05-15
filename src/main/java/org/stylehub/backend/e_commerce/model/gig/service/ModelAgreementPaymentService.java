@@ -14,9 +14,12 @@ import org.stylehub.backend.e_commerce.model.gig.event.ModelAgreementPaymentSucc
 import org.stylehub.backend.e_commerce.model.gig.publisher.ModelAgreementEventPublisher;
 import org.stylehub.backend.e_commerce.model.gig.repository.ModelAgreementPaymentRepository;
 import org.stylehub.backend.e_commerce.model.gig.repository.ModelAgreementRepository;
+import org.stylehub.backend.e_commerce.model.profile.service.ModelProfileAccessService;
 import org.stylehub.backend.e_commerce.order.payment.entity.PaymentMethod;
 import org.stylehub.backend.e_commerce.order.payment.entity.PaymentStatus;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
+import org.stylehub.backend.e_commerce.platform.mail.events.ModelReviewRequestedEmailEvent;
+import org.stylehub.backend.e_commerce.platform.mail.publisher.EmailEventPublisher;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -27,8 +30,10 @@ public class ModelAgreementPaymentService {
 
     private final ModelAgreementPaymentRepository modelAgreementPaymentRepository;
     private final ModelAgreementRepository modelAgreementRepository;
+    private final ModelProfileAccessService modelProfileAccessService;
     private final CurrentUserProvider currentUserProvider;
     private final ModelAgreementEventPublisher modelAgreementEventPublisher;
+    private final EmailEventPublisher emailEventPublisher;
 
     @Transactional
     public ModelAgreementPayment createPendingPayment(ModelAgreement agreement) {
@@ -85,6 +90,18 @@ public class ModelAgreementPaymentService {
                         agreement.getBrand().getUser().getId(),
                         agreement.getModelProfile().getUser().getId(),
                         paidAt,
+                        agreement.getCompletedAt()
+                )
+        );
+
+        this.emailEventPublisher.publishModelReviewRequested(
+                new ModelReviewRequestedEmailEvent(
+                        agreement.getId(),
+                        agreement.getAgreementNumber(),
+                        agreement.getBrand().getUser().getExternalUserId(),
+                        resolveBrandName(agreement),
+                        resolveBrandEmail(agreement),
+                        agreement.getModelProfile().getModelName(),
                         agreement.getCompletedAt()
                 )
         );
@@ -168,6 +185,19 @@ public class ModelAgreementPaymentService {
         return value.trim();
     }
 
+    private String resolveBrandEmail(ModelAgreement agreement) {
+        String brandEmail = normalizeNullableText(agreement.getBrand().getBrandEmail());
+        if (brandEmail != null) {
+            return brandEmail;
+        }
+        return agreement.getBrand().getUser().getEmail();
+    }
+
+    private String resolveBrandName(ModelAgreement agreement) {
+        String brandName = normalizeNullableText(agreement.getBrand().getBrandName());
+        return brandName == null ? "Brand partner" : brandName;
+    }
+
     private ModelAgreementPayment findOrCreateBrandPayment(UUID agreementId) {
         return this.modelAgreementPaymentRepository.findByAgreementIdAndBrandExternalId(agreementId, currentUserProvider.externalId())
                 .orElseGet(() -> {
@@ -179,6 +209,8 @@ public class ModelAgreementPaymentService {
     }
 
     private ModelAgreementPayment findOrCreateModelPayment(UUID agreementId) {
+        this.modelProfileAccessService.requireCurrentModelProfile();
+
         return this.modelAgreementPaymentRepository.findByAgreementIdAndModelExternalId(agreementId, currentUserProvider.externalId())
                 .orElseGet(() -> {
                     ModelAgreement agreement = this.modelAgreementRepository

@@ -302,7 +302,7 @@ public class DashboardNotificationService {
         brandNotification.setRecipientUser(findUser(event.brandUserId()));
         brandNotification.setType(DashboardNotificationType.PAYMENT);
         brandNotification.setTitle("Payment completed");
-        brandNotification.setMessage("Payment for agreement " + event.agreementNumber() + " was completed successfully.");
+        brandNotification.setMessage("Payment for agreement " + event.agreementNumber() + " was completed successfully. You can now review the model.");
         brandNotification.setReferenceType("MODEL_AGREEMENT_PAYMENT");
         brandNotification.setReferenceId(event.paymentId());
         brandNotification.setReferenceCode(event.agreementNumber());

@@ -10,6 +10,11 @@ import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.repository.BrandRepository;
 import org.stylehub.backend.e_commerce.modules.catalog.category.dto.*;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.category.BrandCategoryFilterRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.category.BrandCategoryStatsResponse;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.category.BrandCategoryViewResponse;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.repository.BrandCatalogCategoryQueryRepository;
+import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
@@ -32,6 +37,7 @@ public class CategoryService {
     private BrandRepository brandRepository;
     private CurrentUserProvider currentUserProvider;
     private ImageService imageService;
+    private BrandCatalogCategoryQueryRepository brandCatalogCategoryQueryRepository;
 
     private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
 
@@ -85,6 +91,47 @@ public class CategoryService {
         Page<findAllByBrandId> categoryPage
                 =this.categoryRepository.findAllByBrandExternalUserId(currentUserProvider.externalId(),pageable);
         return mapPaginatedResponse(categoryPage);
+    }
+
+    public PageResponse<BrandCategoryViewResponse> findBrandCategories(
+            BrandCategoryFilterRequest filter,
+            Pageable pageable
+    ) {
+        Page<Category> page = this.brandCatalogCategoryQueryRepository.findBrandCategories(
+                currentUserProvider.externalId(),
+                filter,
+                pageable
+        );
+
+        List<BrandCategoryViewResponse> items = page.getContent().stream()
+                .map(category -> new BrandCategoryViewResponse(
+                        category.getId(),
+                        category.getCategoryNameEn(),
+                        category.getCategoryNameAr(),
+                        category.getCategoryDescriptionEn(),
+                        category.getCategoryDescriptionAr(),
+                        category.getImageUrl(),
+                        category.getCategoryGender(),
+                        category.getParentCategory() == null ? null : category.getParentCategory().getId(),
+                        category.getParentCategory() == null ? null : category.getParentCategory().getCategoryNameEn(),
+                        category.getParentCategory() == null ? null : category.getParentCategory().getCategoryNameAr(),
+                        category.getParentCategory() != null
+                ))
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    public BrandCategoryStatsResponse getBrandCategoryStats() {
+        return this.brandCatalogCategoryQueryRepository.getBrandCategoryStats(currentUserProvider.externalId());
     }
 
     @Transactional

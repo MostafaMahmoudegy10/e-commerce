@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.BrandProductColorViewResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.ProductColorCreationRequest;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.ProductColorDeleteResponse;
 import org.stylehub.backend.e_commerce.product.color.service.ProductColorService;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,6 +24,11 @@ public class BrandOwnerProductColorController {
     public ResponseEntity<Object> addNewProductColor(@PathVariable UUID productId,
                                                        @ModelAttribute ProductColorCreationRequest productColorCreationRequest) {
         return ResponseEntity.ok(this.productColorService.upsertNewProductColor(productColorCreationRequest, productId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BrandProductColorViewResponse>> findProductColors(@PathVariable UUID productId) {
+        return ResponseEntity.ok(this.productColorService.findBrandProductColors(productId));
     }
 
     @DeleteMapping("/{colorId}")

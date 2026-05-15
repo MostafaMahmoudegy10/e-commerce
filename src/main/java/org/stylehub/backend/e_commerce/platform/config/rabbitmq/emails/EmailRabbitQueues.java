@@ -25,7 +25,29 @@ public class EmailRabbitQueues {
         return BindingBuilder.bind(stockInsufficientQueue()).to(ecommerceTopicExchange()).with(RabbitMqNames.STOCK_INSUFFICIENT_ROUTING_KEY);
     }
 
+    @Bean
+    public Queue modelReviewRequestedEmailQueue() {
+        return new Queue(RabbitMqNames.MODEL_REVIEW_REQUESTED_EMAIL_QUEUE);
+    }
 
+    @Bean
+    public Binding modelReviewRequestedEmailBinding() {
+        return BindingBuilder.bind(modelReviewRequestedEmailQueue())
+                .to(ecommerceTopicExchange())
+                .with(RabbitMqNames.MODEL_REVIEW_REQUESTED_EMAIL_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue productReviewRequestedEmailQueue() {
+        return new Queue(RabbitMqNames.PRODUCT_REVIEW_REQUESTED_EMAIL_QUEUE);
+    }
+
+    @Bean
+    public Binding productReviewRequestedEmailBinding() {
+        return BindingBuilder.bind(productReviewRequestedEmailQueue())
+                .to(ecommerceTopicExchange())
+                .with(RabbitMqNames.PRODUCT_REVIEW_REQUESTED_EMAIL_ROUTING_KEY);
+    }
 
 
 

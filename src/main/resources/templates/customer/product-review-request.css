@@ -1,0 +1,140 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #f7f2ec;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #1f2937;
+}
+
+.email-wrapper {
+    width: 100%;
+    padding: 32px 16px;
+    box-sizing: border-box;
+}
+
+.email-card {
+    max-width: 640px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1px solid #eadfd4;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 12px 40px rgba(31, 41, 55, 0.08);
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    color: #d9485f;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+h1 {
+    margin: 0 0 16px;
+    font-size: 30px;
+    line-height: 1.2;
+    color: #111827;
+}
+
+.intro,
+.body-copy,
+.footer {
+    margin: 0 0 16px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #475467;
+}
+
+.detail-box {
+    margin: 24px 0;
+    padding: 18px 20px;
+    border-radius: 16px;
+    background: #fcf8f3;
+    border: 1px solid #f0e4d8;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.label {
+    font-size: 14px;
+    color: #8b6f53;
+}
+
+.value {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 600;
+    text-align: right;
+}
+
+.product-review-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0 0 24px;
+}
+
+.product-rating-block {
+    padding: 18px 20px;
+    border-radius: 16px;
+    background: #fcf8f3;
+    border: 1px solid #f0e4d8;
+}
+
+.product-name {
+    margin: 0 0 12px;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.rating-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 8px 0 16px;
+}
+
+.rating-button {
+    display: inline-block;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: #111827;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 118px;
+    text-align: center;
+}
+
+.rating-note {
+    margin: 0 0 18px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #667085;
+}
+
+.secondary-link {
+    display: inline-block;
+    margin: 0 0 20px;
+    color: #111827 !important;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.muted {
+    color: #98a2b3;
+}

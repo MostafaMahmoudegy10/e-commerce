@@ -27,6 +27,9 @@ import org.stylehub.backend.e_commerce.order.publisher.OrderPublisherEvents;
 import org.stylehub.backend.e_commerce.order.repository.BrandOrderQueryRepository;
 import org.stylehub.backend.e_commerce.order.repository.OrderRepository;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
+import org.stylehub.backend.e_commerce.platform.mail.dto.ProductReviewEmailItem;
+import org.stylehub.backend.e_commerce.platform.mail.events.ProductReviewRequestedEmailEvent;
+import org.stylehub.backend.e_commerce.platform.mail.publisher.EmailEventPublisher;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 
 import java.math.BigDecimal;
@@ -34,6 +37,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -49,6 +53,7 @@ public class BrandOrderService {
     private final CurrentUserProvider currentUserProvider;
     private final BrandService brandService;
     private final OrderPublisherEvents orderPublisherEvents;
+    private final EmailEventPublisher emailEventPublisher;
 
     public PageResponse<BrandOrderListItemResponse> findBrandOrders(
             BrandOrderFilterRequest filter,
@@ -146,6 +151,7 @@ public class BrandOrderService {
         order.setDeliveredAt(Instant.now());
         this.orderRepository.save(order);
         this.orderPublisherEvents.publishOrderDelivered(buildOrderLifecycleEvent(order, this.paymentRepository.findByOrder_Id(orderId).orElse(null)));
+        publishProductReviewRequest(order);
 
         return new BrandOrderStatusUpdateResponse(
                 order.getId(),
@@ -155,6 +161,31 @@ public class BrandOrderService {
                 order.getDeliveredAt(),
                 order.getCancelledAt(),
                 "Order marked as delivered successfully"
+        );
+    }
+
+    private void publishProductReviewRequest(Order order) {
+        List<OrderItem> orderItems = this.orderItemRepository.findAllWithDetailsByOrderId(order.getId());
+        List<ProductReviewEmailItem> products = orderItems.stream()
+                .map(orderItem -> orderItem.getVariant().getProductColor().getProduct())
+                .filter(Objects::nonNull)
+                .map(product -> new ProductReviewEmailItem(
+                        product.getId(),
+                        product.getProductNameEn()
+                ))
+                .distinct()
+                .toList();
+
+        this.emailEventPublisher.publishProductReviewRequested(
+                new ProductReviewRequestedEmailEvent(
+                        order.getId(),
+                        order.getOrderNumber(),
+                        order.getCustomer().getUser().getExternalUserId(),
+                        order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName(),
+                        order.getCustomer().getCustomerEmail(),
+                        products,
+                        order.getDeliveredAt()
+                )
         );
     }
 

@@ -8,6 +8,7 @@ import org.stylehub.backend.e_commerce.model.gig.dto.GigAgreementViewResponse;
 import org.stylehub.backend.e_commerce.model.gig.entity.AgreementStatus;
 import org.stylehub.backend.e_commerce.model.gig.entity.ModelAgreement;
 import org.stylehub.backend.e_commerce.model.gig.repository.ModelAgreementRepository;
+import org.stylehub.backend.e_commerce.model.profile.service.ModelProfileAccessService;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 
@@ -19,9 +20,12 @@ import java.util.UUID;
 public class ModelAgreementService {
 
     private final ModelAgreementRepository modelAgreementRepository;
+    private final ModelProfileAccessService modelProfileAccessService;
     private final CurrentUserProvider currentUserProvider;
 
     public PageResponse<GigAgreementViewResponse> findModelAgreements(Pageable pageable, AgreementStatus status) {
+        this.modelProfileAccessService.requireCurrentModelProfile();
+
         Page<ModelAgreement> page = this.modelAgreementRepository.findAllByModelExternalId(
                 currentUserProvider.externalId(),
                 status,
@@ -66,6 +70,8 @@ public class ModelAgreementService {
     }
 
     public GigAgreementViewResponse findModelAgreementDetails(UUID agreementId) {
+        this.modelProfileAccessService.requireCurrentModelProfile();
+
         ModelAgreement agreement = this.modelAgreementRepository
                 .findByIdAndModelExternalId(agreementId, currentUserProvider.externalId())
                 .orElseThrow(() -> new IllegalArgumentException("Agreement not found"));

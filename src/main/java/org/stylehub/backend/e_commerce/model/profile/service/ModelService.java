@@ -33,6 +33,7 @@ public class ModelService {
     private final CurrentUserProvider currentUserProvider;
     private final CustomerProfileService customerProfileService;
     private final ImageService imageService;
+    private final ModelProfileAccessService modelProfileAccessService;
 
     @Transactional
     public ModelCreationResponse createModel(ModelCreationRequest request) {
@@ -79,11 +80,7 @@ public class ModelService {
     public void addAvailableFor(ModelAvailableForRequest request) {
         validateAvailableForRequest(request);
 
-        CustomerProfile customerProfile =
-                this.customerProfileService.findCustomerProfileByExternalUserId(currentUserProvider.externalId());
-
-        ModelProfile modelProfile = this.modelProfileRepository.findModelProfileByUser_Id(customerProfile.getUser().getId())
-                .orElseThrow(() -> new IllegalStateException("Model Profile does not exist, create it first"));
+        ModelProfile modelProfile = this.modelProfileAccessService.requireCurrentModelProfile();
 
         List<ModelProfileAvailableFor> availableForList = request.availableFor().stream()
                 .map(availableForCreation -> {

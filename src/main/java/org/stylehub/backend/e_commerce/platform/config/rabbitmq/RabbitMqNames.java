@@ -12,6 +12,18 @@ public final class RabbitMqNames {
     public static final String STOCK_INSUFFICIENT_QUEUE =
             "stylehub.email.stock.insufficient.queue";
 
+    public static final String MODEL_REVIEW_REQUESTED_EMAIL_ROUTING_KEY =
+            "ecommerce.model.review.requested.email";
+
+    public static final String MODEL_REVIEW_REQUESTED_EMAIL_QUEUE =
+            "stylehub.email.model.review.requested.queue";
+
+    public static final String PRODUCT_REVIEW_REQUESTED_EMAIL_ROUTING_KEY =
+            "ecommerce.product.review.requested.email";
+
+    public static final String PRODUCT_REVIEW_REQUESTED_EMAIL_QUEUE =
+            "stylehub.email.product.review.requested.queue";
+
     //queues for order
     public static final String ORDER_CREATED_QUEUE=
             "ecommerce.order.created.queue";

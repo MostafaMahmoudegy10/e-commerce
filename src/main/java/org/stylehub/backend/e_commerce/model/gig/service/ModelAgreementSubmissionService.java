@@ -21,6 +21,7 @@ import org.stylehub.backend.e_commerce.model.gig.event.ModelAgreementSubmittedEv
 import org.stylehub.backend.e_commerce.model.gig.publisher.ModelAgreementEventPublisher;
 import org.stylehub.backend.e_commerce.model.gig.repository.ModelAgreementRepository;
 import org.stylehub.backend.e_commerce.model.gig.repository.ModelAgreementSubmissionRepository;
+import org.stylehub.backend.e_commerce.model.profile.service.ModelProfileAccessService;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
@@ -40,6 +41,7 @@ public class ModelAgreementSubmissionService {
     private final ModelAgreementRepository modelAgreementRepository;
     private final ModelAgreementSubmissionRepository modelAgreementSubmissionRepository;
     private final ImageService imageService;
+    private final ModelProfileAccessService modelProfileAccessService;
     private final CurrentUserProvider currentUserProvider;
     private final ModelAgreementEventPublisher modelAgreementEventPublisher;
 
@@ -49,6 +51,7 @@ public class ModelAgreementSubmissionService {
             ModelAgreementSubmissionCreateRequest request
     ) {
         validateCreateRequest(request);
+        this.modelProfileAccessService.requireCurrentModelProfile();
 
         ModelAgreement agreement = this.modelAgreementRepository
                 .findByIdAndModelExternalId(agreementId, currentUserProvider.externalId())
@@ -95,6 +98,8 @@ public class ModelAgreementSubmissionService {
     }
 
     public List<GigAgreementSubmissionViewResponse> findModelSubmissions(UUID agreementId) {
+        this.modelProfileAccessService.requireCurrentModelProfile();
+
         this.modelAgreementRepository.findByIdAndModelExternalId(agreementId, currentUserProvider.externalId())
                 .orElseThrow(() -> new IllegalArgumentException("Agreement not found"));
 

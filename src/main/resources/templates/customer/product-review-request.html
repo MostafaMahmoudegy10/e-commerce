@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Your Order</title>
+    <style>{{EMAIL_CSS}}</style>
+</head>
+<body>
+<div class="email-wrapper">
+    <div class="email-card">
+        <p class="eyebrow">Order delivered</p>
+        <h1>How was your order?</h1>
+        <p class="intro">
+            Hi {{CUSTOMER_NAME}}, your StyleHub order has been delivered successfully.
+        </p>
+
+        <div class="detail-box">
+            <div class="detail-row">
+                <span class="label">Order</span>
+                <span class="value">{{ORDER_NUMBER}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Delivered at</span>
+                <span class="value">{{DELIVERED_AT}}</span>
+            </div>
+        </div>
+
+        <p class="body-copy">
+            You can now review the products from this order directly from this email:
+        </p>
+
+        <div class="product-review-groups">
+            {{PRODUCT_REVIEW_BLOCKS}}
+        </div>
+
+        <p class="rating-note">
+            Choose a star rating under any product to submit that review immediately.
+        </p>
+
+        <a class="secondary-link" href="{{REVIEW_URL}}" target="_blank" rel="noopener noreferrer">
+            Open order page manually
+        </a>
+
+        <p class="footer">
+            Your feedback helps other customers make better choices and helps brands improve quality.
+        </p>
+        <p class="footer muted">This is an automated email from StyleHub.</p>
+    </div>
+</div>
+</body>
+</html>

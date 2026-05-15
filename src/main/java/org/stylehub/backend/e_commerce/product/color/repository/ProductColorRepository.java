@@ -2,6 +2,8 @@ package org.stylehub.backend.e_commerce.product.color.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.BrandProductColorCountRow;
 import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
 
 import java.util.List;
@@ -32,4 +34,15 @@ public interface ProductColorRepository extends JpaRepository<ProductColor, UUID
     Optional<ProductColor> findProductColorByIdAndColorCode(UUID productId,String colorCode);
 
     List<ProductColor> findAllByProduct_IdAndProduct_Brand_User_ExternalUserId(UUID productId, String brandId);
+
+    @Query("""
+            select new org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.BrandProductColorCountRow(
+                pc.product.id,
+                count(pc.id)
+            )
+            from ProductColor pc
+            where pc.product.id in :productIds
+            group by pc.product.id
+            """)
+    List<BrandProductColorCountRow> countByProductIds(@Param("productIds") List<UUID> productIds);
 }

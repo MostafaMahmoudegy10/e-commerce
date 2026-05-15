@@ -3,6 +3,7 @@ package org.stylehub.backend.e_commerce.product.color.variant.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.BrandProductVariantCountRow;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.home.dto.BrandDashboardProductStockRow;
 import org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVariant;
 
@@ -71,5 +72,17 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
             group by pc.product.id
             """)
     List<BrandDashboardProductStockRow> sumStockByProductIds(@Param("productIds") List<UUID> productIds);
+
+    @Query("""
+            select new org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.BrandProductVariantCountRow(
+                pc.product.id,
+                count(pv.id)
+            )
+            from ProductVariant pv
+            join pv.productColor pc
+            where pc.product.id in :productIds
+            group by pc.product.id
+            """)
+    List<BrandProductVariantCountRow> countByProductIds(@Param("productIds") List<UUID> productIds);
 
 }

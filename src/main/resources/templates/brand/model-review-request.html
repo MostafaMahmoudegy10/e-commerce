@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Your Model</title>
+    <style>{{EMAIL_CSS}}</style>
+</head>
+<body>
+<div class="email-wrapper">
+    <div class="email-card">
+        <p class="eyebrow">Agreement completed</p>
+        <h1>Share your feedback</h1>
+        <p class="intro">
+            Hi {{BRAND_NAME}}, your agreement with <strong>{{MODEL_NAME}}</strong> has been completed successfully.
+        </p>
+
+        <div class="detail-box">
+            <div class="detail-row">
+                <span class="label">Agreement</span>
+                <span class="value">{{AGREEMENT_NUMBER}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Completed at</span>
+                <span class="value">{{COMPLETED_AT}}</span>
+            </div>
+        </div>
+
+        <p class="body-copy">
+            Your rating helps other brands understand the model's professionalism, delivery quality, and communication.
+        </p>
+
+        <div class="rating-grid">
+            {{STAR_BUTTONS}}
+        </div>
+
+        <p class="rating-note">
+            Pick a star rating above to submit your review directly from this email.
+        </p>
+
+        <a class="secondary-link" href="{{REVIEW_URL}}" target="_blank" rel="noopener noreferrer">
+            Open dashboard to edit the review manually
+        </a>
+
+        <p class="footer">
+            If a rating button does not work, open the dashboard link above and submit the review manually.
+        </p>
+        <p class="footer muted">This is an automated email from StyleHub.</p>
+    </div>
+</div>
+</body>
+</html>

@@ -10,6 +10,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.multipart.MultipartFile;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.ProductColorCreationRequest;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.ProductColorDeleteResponse;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.color.BrandProductColorViewResponse;
 import org.stylehub.backend.e_commerce.platform.media.ProductColorImagesRepo;
 import org.stylehub.backend.e_commerce.platform.media.entity.ProductColorImages;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -255,5 +257,31 @@ public class ProductColorService {
 
     public List<String> findAllColorImagesByColorId(UUID id) {
         return this.productColorImagesRepo.findImageUrlsByProductColor_Id(id);
+    }
+
+    public List<BrandProductColorViewResponse> findBrandProductColors(UUID productId) {
+        String brandExternalUserId = currentUserProvider.externalId();
+        this.productService.findProductById(productId, brandExternalUserId);
+
+        return this.findAllProductColorsByProductIdAndBrandId(productId, brandExternalUserId).stream()
+                .sorted(Comparator.comparing(ProductColor::getColorCode, String.CASE_INSENSITIVE_ORDER))
+                .map(color -> {
+                    List<org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVariant> variants =
+                            this.productVariantRepository.findAllByProductColor_Id(color.getId());
+                    long totalStock = variants.stream()
+                            .map(org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVariant::getStock)
+                            .filter(java.util.Objects::nonNull)
+                            .mapToLong(Integer::longValue)
+                            .sum();
+
+                    return new BrandProductColorViewResponse(
+                            color.getId(),
+                            color.getColorCode(),
+                            this.findAllColorImagesByColorId(color.getId()),
+                            (long) variants.size(),
+                            totalStock
+                    );
+                })
+                .toList();
     }
 }

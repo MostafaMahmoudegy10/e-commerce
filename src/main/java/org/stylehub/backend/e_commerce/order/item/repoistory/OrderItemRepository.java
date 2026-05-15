@@ -3,6 +3,7 @@ package org.stylehub.backend.e_commerce.order.item.repoistory;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
+import org.stylehub.backend.e_commerce.order.entity.OrderStatus;
 import org.stylehub.backend.e_commerce.order.item.entity.OrderItem;
 
 import java.util.List;
@@ -21,4 +22,32 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> {
             order by oi.id
             """)
     List<OrderItem> findAllWithDetailsByOrderId(@Param("orderId") UUID orderId);
+
+    @Query("""
+            select (count(oi.id) > 0)
+            from OrderItem oi
+            where oi.order.customer.id = :customerId
+              and oi.variant.productColor.product.id = :productId
+              and oi.order.orderStatus = :orderStatus
+            """)
+    boolean existsByCustomerIdAndProductIdAndOrderStatus(
+            @Param("customerId") UUID customerId,
+            @Param("productId") UUID productId,
+            @Param("orderStatus") OrderStatus orderStatus
+    );
+
+    @Query("""
+            select (count(oi.id) > 0)
+            from OrderItem oi
+            where oi.order.id = :orderId
+              and oi.order.customer.id = :customerId
+              and oi.variant.productColor.product.id = :productId
+              and oi.order.orderStatus = :orderStatus
+            """)
+    boolean existsByOrderIdAndCustomerIdAndProductIdAndOrderStatus(
+            @Param("orderId") UUID orderId,
+            @Param("customerId") UUID customerId,
+            @Param("productId") UUID productId,
+            @Param("orderStatus") OrderStatus orderStatus
+    );
 }

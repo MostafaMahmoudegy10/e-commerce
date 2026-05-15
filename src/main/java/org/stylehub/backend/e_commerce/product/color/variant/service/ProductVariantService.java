@@ -9,6 +9,7 @@ import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantCreationResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantStockUpdateRequest;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantStockUpdateResponse;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.BrandProductVariantViewResponse;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.product.color.entity.ProductColor;
 import org.stylehub.backend.e_commerce.product.color.service.ProductColorService;
@@ -19,6 +20,7 @@ import org.stylehub.backend.e_commerce.product.service.ProductService;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -237,5 +239,27 @@ public class ProductVariantService {
     public List<ProductVariant> findAllByProductId(UUID productId) {
         return this.productVariantRepository.findAllByProductColor_Product_Id(productId);
 
+    }
+
+    public List<BrandProductVariantViewResponse> findBrandProductVariants(UUID productId, UUID colorId) {
+        String brandExternalUserId = currentUserProvider.externalId();
+        this.productService.findProductById(productId, brandExternalUserId);
+        this.productColorService.findProductColorByIdAndProductIdAndBrandExternalUserId(
+                colorId,
+                productId,
+                brandExternalUserId
+        );
+
+        return this.productVariantRepository.findAllByProductColor_Id(colorId).stream()
+                .sorted(Comparator.comparing(ProductVariant::getSize, String.CASE_INSENSITIVE_ORDER))
+                .map(variant -> new BrandProductVariantViewResponse(
+                        variant.getId(),
+                        variant.getSize(),
+                        variant.getSku(),
+                        variant.getStock(),
+                        variant.getPriceOverride(),
+                        variant.getEffectivePrice()
+                ))
+                .toList();
     }
 }

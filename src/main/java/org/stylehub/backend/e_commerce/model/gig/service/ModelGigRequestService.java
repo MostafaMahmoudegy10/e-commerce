@@ -26,6 +26,7 @@ import org.stylehub.backend.e_commerce.model.gig.repository.ModelAgreementReposi
 import org.stylehub.backend.e_commerce.model.gig.repository.ModelGigRequestRepository;
 import org.stylehub.backend.e_commerce.model.profile.entity.ModelProfile;
 import org.stylehub.backend.e_commerce.model.profile.repository.ModelProfileRepository;
+import org.stylehub.backend.e_commerce.model.profile.service.ModelProfileAccessService;
 import org.stylehub.backend.e_commerce.order.payment.entity.PaymentStatus;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
@@ -42,6 +43,7 @@ public class ModelGigRequestService {
     private final ModelGigRequestRepository modelGigRequestRepository;
     private final ModelAgreementRepository modelAgreementRepository;
     private final ModelProfileRepository modelProfileRepository;
+    private final ModelProfileAccessService modelProfileAccessService;
     private final BrandService brandService;
     private final CurrentUserProvider currentUserProvider;
     private final ModelGigRequestEventPublisher modelGigRequestEventPublisher;
@@ -104,6 +106,8 @@ public class ModelGigRequestService {
     }
 
     public PageResponse<ModelGigRequestViewResponse> findMyRequests(Pageable pageable, RequestStatus status) {
+        this.modelProfileAccessService.requireCurrentModelProfile();
+
         Page<ModelGigRequest> page = this.modelGigRequestRepository.findAllByModelExternalId(
                 currentUserProvider.externalId(),
                 status,
@@ -315,6 +319,8 @@ public class ModelGigRequestService {
     }
 
     private ModelGigRequest findOwnedRequest(UUID requestId) {
+        this.modelProfileAccessService.requireCurrentModelProfile();
+
         return this.modelGigRequestRepository.findByIdAndModelExternalId(requestId, currentUserProvider.externalId())
                 .orElseThrow(() -> new IllegalArgumentException("Model gig request not found"));
     }

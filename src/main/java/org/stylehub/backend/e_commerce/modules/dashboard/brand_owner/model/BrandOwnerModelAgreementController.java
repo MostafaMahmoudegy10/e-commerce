@@ -23,6 +23,9 @@ import org.stylehub.backend.e_commerce.model.gig.entity.AgreementStatus;
 import org.stylehub.backend.e_commerce.model.gig.service.ModelAgreementPaymentService;
 import org.stylehub.backend.e_commerce.model.gig.service.ModelAgreementService;
 import org.stylehub.backend.e_commerce.model.gig.service.ModelAgreementSubmissionService;
+import org.stylehub.backend.e_commerce.model.review.dto.ModelAgreementReviewResponse;
+import org.stylehub.backend.e_commerce.model.review.dto.ModelReviewUpsertRequest;
+import org.stylehub.backend.e_commerce.model.review.service.ModelReviewService;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 
 import java.util.List;
@@ -37,6 +40,7 @@ public class BrandOwnerModelAgreementController {
     private final ModelAgreementService modelAgreementService;
     private final ModelAgreementSubmissionService modelAgreementSubmissionService;
     private final ModelAgreementPaymentService modelAgreementPaymentService;
+    private final ModelReviewService modelReviewService;
 
     @GetMapping
     public ResponseEntity<PageResponse<GigAgreementViewResponse>> findBrandAgreements(
@@ -92,5 +96,18 @@ public class BrandOwnerModelAgreementController {
             @RequestBody GigAgreementPaymentFailureRequest request
     ) {
         return ResponseEntity.ok(this.modelAgreementPaymentService.markPaymentFailed(agreementId, request));
+    }
+
+    @GetMapping("/{agreementId}/review")
+    public ResponseEntity<ModelAgreementReviewResponse> findAgreementReview(@PathVariable UUID agreementId) {
+        return ResponseEntity.ok(this.modelReviewService.findBrandAgreementReview(agreementId));
+    }
+
+    @PostMapping("/{agreementId}/review")
+    public ResponseEntity<ModelAgreementReviewResponse> upsertAgreementReview(
+            @PathVariable UUID agreementId,
+            @RequestBody ModelReviewUpsertRequest request
+    ) {
+        return ResponseEntity.ok(this.modelReviewService.upsertBrandAgreementReview(agreementId, request));
     }
 }

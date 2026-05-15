@@ -5,12 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.BrandProductVariantViewResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantCreationRequest;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantCreationResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantStockUpdateRequest;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.variant.ProductVariantStockUpdateResponse;
 import org.stylehub.backend.e_commerce.product.color.variant.service.ProductVariantService;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,6 +30,14 @@ public class BrandOwnerProductVariantController {
             @PathVariable("colorId") UUID colorId
     ){
         return ResponseEntity.ok(this.productVariantService.upsertVariant(productVariantCreationRequest,productId,colorId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BrandProductVariantViewResponse>> findProductVariants(
+            @PathVariable UUID productId,
+            @PathVariable UUID colorId
+    ) {
+        return ResponseEntity.ok(this.productVariantService.findBrandProductVariants(productId, colorId));
     }
 
     @PatchMapping("/{variantId}/stock")

@@ -8,21 +8,30 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.service.BrandService;
-import org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary;
 import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.modules.catalog.category.repository.CategoryRepository;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.ProductPatchRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.BrandProductColorCountRow;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.BrandProductFilterRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.BrandProductVariantCountRow;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.BrandProductViewResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.FindAllProductForBrand;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.repository.BrandCatalogProductQueryRepository;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.home.dto.BrandDashboardProductStockRow;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
+import org.stylehub.backend.e_commerce.product.color.repository.ProductColorRepository;
+import org.stylehub.backend.e_commerce.product.color.variant.repository.ProductVariantRepository;
 import org.stylehub.backend.e_commerce.product.dto.ProductCreationRequest;
 import org.stylehub.backend.e_commerce.product.dto.ProductCreationResponse;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 import org.stylehub.backend.e_commerce.product.repository.ProductRepository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -34,6 +43,9 @@ public class ProductService {
     private final ImageService imageService;
     private final CurrentUserProvider currentUserProvider;
     private final CategoryRepository categoryRepository;
+    private final BrandCatalogProductQueryRepository brandCatalogProductQueryRepository;
+    private final ProductColorRepository productColorRepository;
+    private final ProductVariantRepository productVariantRepository;
 
     @Transactional
     public ProductCreationResponse addNewProduct(ProductCreationRequest request) {
@@ -189,8 +201,62 @@ public class ProductService {
         return brandId;
     }
 
-    public Page<FindAllProductForBrand> findAllProductsForBrand(Pageable pageable) {
-        Brand brand=this.brandService.findBrandByExternalId(currentUserProvider.externalId());
-        return this.productRepository.findAllProductsForBrand(brand.getId(),pageable);
+    public PageResponse<BrandProductViewResponse> findAllProductsForBrand(
+            BrandProductFilterRequest filter,
+            Pageable pageable
+    ) {
+        Page<Product> page = this.brandCatalogProductQueryRepository.findBrandProducts(
+                currentUserProvider.externalId(),
+                filter,
+                pageable
+        );
+
+        List<UUID> productIds = page.getContent().stream()
+                .map(Product::getId)
+                .toList();
+
+        Map<UUID, Long> colorsCountByProductId = new HashMap<>();
+        Map<UUID, Long> variantsCountByProductId = new HashMap<>();
+        Map<UUID, Long> stockByProductId = new HashMap<>();
+
+        if (!productIds.isEmpty()) {
+            this.productColorRepository.countByProductIds(productIds).forEach(
+                    row -> colorsCountByProductId.put(row.productId(), row.colorsCount())
+            );
+            this.productVariantRepository.countByProductIds(productIds).forEach(
+                    row -> variantsCountByProductId.put(row.productId(), row.variantsCount())
+            );
+            this.productVariantRepository.sumStockByProductIds(productIds).forEach(
+                    row -> stockByProductId.put(row.productId(), row.totalStock())
+            );
+        }
+
+        List<BrandProductViewResponse> items = page.getContent().stream()
+                .map(product -> new BrandProductViewResponse(
+                        product.getId(),
+                        product.getProductNameEn(),
+                        product.getProductNameAr(),
+                        product.getThumbnail(),
+                        product.getCategory().getId(),
+                        product.getCategory().getCategoryNameEn(),
+                        product.getCategory().getCategoryNameAr(),
+                        product.getCategory().getCategoryGender(),
+                        colorsCountByProductId.getOrDefault(product.getId(), 0L),
+                        variantsCountByProductId.getOrDefault(product.getId(), 0L),
+                        stockByProductId.getOrDefault(product.getId(), 0L),
+                        product.getPrice(),
+                        product.getCreationDate()
+                ))
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
     }
 }
