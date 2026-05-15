@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
+import org.stylehub.backend.e_commerce.customer.profile.dto.CustomerProfileDeletedRequest;
 import org.stylehub.backend.e_commerce.customer.profile.dto.CustomerProfileSetupRequest;
 import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
 import org.stylehub.backend.e_commerce.customer.profile.repository.CustomerProfileRepository;
@@ -26,9 +27,30 @@ public class CustomerProfileService {
     @Transactional
     @RabbitListener(queues = "customer.created.user.service.q")
     public void setupProfile(CustomerProfileSetupRequest request) {
+        syncProfile(request);
+    }
+
+    @Transactional
+    @RabbitListener(queues = "customer.updated.user.service.q")
+    public void updateProfile(CustomerProfileSetupRequest request) {
+        syncProfile(request);
+    }
+
+    @Transactional
+    @RabbitListener(queues = "customer.deleted.user.service.q")
+    public void deleteProfile(CustomerProfileDeletedRequest request) {
+        if (request == null || isBlank(request.userId())) {
+            throw new IllegalArgumentException("User id is required.");
+        }
+
+        this.customerProfileRepository.deleteByUser_ExternalUserId(request.userId());
+        this.userSyncService.deleteByExternalId(request.userId());
+    }
+
+    private void syncProfile(CustomerProfileSetupRequest request) {
         validateRequest(request);
 
-        User user = userSyncService.create(request.userId(),"CUSTOMER",request.email());
+        User user = userSyncService.sync(request.userId(),"CUSTOMER",request.email());
 
         if (customerProfileRepository.existsByUsernameAndUser_ExternalUserIdNot(request.username(),
                 request.userId())) {
@@ -50,7 +72,6 @@ public class CustomerProfileService {
         profile.setCustomerEmail(request.email());
 
         customerProfileRepository.save(profile);
-
 
     }
     public CustomerProfile findCustomerProfileByExternalUserId(String id) {

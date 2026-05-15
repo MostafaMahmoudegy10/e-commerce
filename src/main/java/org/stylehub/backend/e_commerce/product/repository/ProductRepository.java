@@ -5,7 +5,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.stylehub.backend.e_commerce.customer.dto.product.ProductSummary;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.FindAllProductForBrand;
 import org.stylehub.backend.e_commerce.product.entity.Product;
 
@@ -13,6 +12,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
+
+    long countByBrand_User_ExternalUserId(String externalId);
+
+    @Query("""
+            select avg(p.price)
+            from Product p
+            where p.brand.user.externalUserId = :externalId
+            """)
+    Double averagePriceByBrandExternalId(@Param("externalId") String externalId);
 
     @Query("""
                 select (count(p) > 0)
@@ -102,4 +110,5 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     Page<FindAllProductForBrand> findAllProductsForBrand(
             @Param("brandId") UUID brandId,
             Pageable pageable
-    );}
+    );
+}

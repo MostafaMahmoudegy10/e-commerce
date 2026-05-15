@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationFilterRequest;
+import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationReadAllResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationStatsResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.dto.DashboardNotificationViewResponse;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.service.DashboardNotificationService;
@@ -43,5 +44,10 @@ public class DashboardNotificationController {
     @PostMapping("/{notificationId}/read")
     public ResponseEntity<DashboardNotificationViewResponse> markAsRead(@PathVariable UUID notificationId) {
         return ResponseEntity.ok(this.dashboardNotificationService.markAsRead(notificationId));
+    }
+
+    @PostMapping("/read-all")
+    public ResponseEntity<DashboardNotificationReadAllResponse> markAllAsRead() {
+        return ResponseEntity.ok(this.dashboardNotificationService.markAllAsRead());
     }
 }

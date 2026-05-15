@@ -11,6 +11,7 @@ import java.util.UUID;
 public record OrderCreationEvent(
         UUID orderId,
         String orderNumber,
+        UUID brandUserId,
         UUID customerId,
         String customerName,
         String customerEmail,

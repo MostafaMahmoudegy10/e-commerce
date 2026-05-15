@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.stylehub.backend.e_commerce.brand.dto.BrandCreationRequest;
+import org.stylehub.backend.e_commerce.brand.dto.BrandProfileDeletedRequest;
+import org.stylehub.backend.e_commerce.brand.dto.BrandProfileRes;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.brand.repository.BrandRepository;
 import org.stylehub.backend.e_commerce.user.entity.User;
@@ -21,24 +23,40 @@ public class BrandService {
     @Transactional
     @RabbitListener(queues = "brand.created.user.service.q")
     public void setupBrand(BrandCreationRequest brandCreationRequest) {
+        syncBrand(brandCreationRequest);
+    }
+
+    @Transactional
+    @RabbitListener(queues = "brand.updated.user.service.q")
+    public void updateBrand(BrandCreationRequest brandCreationRequest) {
+        syncBrand(brandCreationRequest);
+    }
+
+    @Transactional
+    @RabbitListener(queues = "brand.deleted.user.service.q")
+    public void deleteBrand(BrandProfileDeletedRequest request) {
+        if (request == null || request.brandId() == null || request.brandId().isBlank()) {
+            throw new IllegalArgumentException("Brand id is required.");
+        }
+
+        this.brandRepository.deleteByUser_ExternalUserId(request.brandId());
+        this.userSyncService.deleteByExternalId(request.brandId());
+    }
+
+    private void syncBrand(BrandCreationRequest brandCreationRequest) {
         validateBrandCreationRequest(brandCreationRequest);
 
-        brandRepository.findByUser_ExternalUserId(brandCreationRequest.brandId())
-                .ifPresent(brand -> {
-                    throw new IllegalArgumentException("Brand profile already exists for this user.");
-                });
+        User user = userSyncService.sync(brandCreationRequest.brandId(),"BRAND_OWNER",brandCreationRequest.email());
 
-        User user = userSyncService.create(brandCreationRequest.brandId(),"BRAND_OWNER",brandCreationRequest.email());
-
-        Brand brand = new Brand();
+        Brand brand = this.brandRepository.findByUser_ExternalUserId(brandCreationRequest.brandId())
+                .orElseGet(Brand::new);
         brand.setBrandName(brandCreationRequest.brandName());
         brand.setBrandEmail(user.getEmail());
         brand.setDescription(brandCreationRequest.bio());
         brand.setBrandImageUrl(brandCreationRequest.websiteUrl());
         brand.setUser(user);
 
-      brandRepository.save(brand);
-
+        this.brandRepository.save(brand);
     }
 
     private void validateBrandCreationRequest(BrandCreationRequest brandCreationRequest) {
@@ -73,5 +91,8 @@ public class BrandService {
         return this.brandRepository.findByUser_ExternalUserId(brandId).orElseThrow(()->new IllegalArgumentException("Brand id not found"));
     }
 
+    public BrandProfileRes findBrandProfile(String brandId){
+        return this.brandRepository.findBrandProfile(brandId);
+    }
 
 }

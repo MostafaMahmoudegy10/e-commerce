@@ -13,23 +13,29 @@ import org.stylehub.backend.e_commerce.customer.profile.service.CustomerProfileS
 import org.stylehub.backend.e_commerce.customer.service.CustomerCartService;
 import org.stylehub.backend.e_commerce.order.entity.Order;
 import org.stylehub.backend.e_commerce.order.entity.OrderStatus;
+import org.stylehub.backend.e_commerce.order.event.InventoryLowStockEvent;
 import org.stylehub.backend.e_commerce.order.event.OrderCreationEvent;
+import org.stylehub.backend.e_commerce.order.event.OrderLifecycleEvent;
 import org.stylehub.backend.e_commerce.order.item.entity.OrderItem;
 import org.stylehub.backend.e_commerce.order.item.repoistory.OrderItemRepository;
 import org.stylehub.backend.e_commerce.order.payment.entity.Payment;
 import org.stylehub.backend.e_commerce.order.payment.entity.PaymentMethod;
 import org.stylehub.backend.e_commerce.order.payment.entity.PaymentStatus;
 import org.stylehub.backend.e_commerce.order.payment.repository.PaymentRepository;
+import org.stylehub.backend.e_commerce.order.publisher.OrderPublisherEvents;
 import org.stylehub.backend.e_commerce.order.repository.OrderRepository;
 import org.stylehub.backend.e_commerce.platform.security.current_user.CurrentUserProvider;
 import org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVariant;
 import org.stylehub.backend.e_commerce.product.color.variant.repository.ProductVariantRepository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
+
+    private static final int LOW_STOCK_THRESHOLD = 5;
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
@@ -38,6 +44,7 @@ public class PaymentService {
     private final CartRepository cartRepository;
     private final CustomerProfileService customerProfileService;
     private final CurrentUserProvider currentUserProvider;
+    private final OrderPublisherEvents orderPublisherEvents;
 
     @Transactional
     public Payment createPayment(OrderCreationEvent event) {
@@ -92,6 +99,7 @@ public class PaymentService {
         decreaseStock(orderItems);
 
         payment.setPaymentStatus(PaymentStatus.PAID);
+        payment.setPaidAt(Instant.now());
         order.setOrderStatus(OrderStatus.PAID);
 
         Cart cart = order.getCart();
@@ -100,6 +108,7 @@ public class PaymentService {
         paymentRepository.save(payment);
         orderRepository.save(order);
         cartRepository.save(cart);
+        this.orderPublisherEvents.publishOrderPaid(buildOrderLifecycleEvent(order, payment));
 
         return new PaymentResponse(
                 payment.getId(),
@@ -131,6 +140,7 @@ public class PaymentService {
 
         payment.setPaymentStatus(PaymentStatus.FAILED);
         order.setOrderStatus(OrderStatus.CANCELLED);
+        order.setCancelledAt(Instant.now());
 
 
         paymentRepository.save(payment);
@@ -168,6 +178,31 @@ public class PaymentService {
             variant.setStock(variant.getStock() - item.getOrderQuantity());
 
             productVariantRepository.save(variant);
+
+            if (variant.getStock() <= LOW_STOCK_THRESHOLD) {
+                this.orderPublisherEvents.publishInventoryLowStock(new InventoryLowStockEvent(
+                        item.getOrder().getBrand().getUser().getId(),
+                        variant.getProductColor().getProduct().getId(),
+                        variant.getProductColor().getProduct().getProductNameEn(),
+                        variant.getSku(),
+                        variant.getStock(),
+                        Instant.now()
+                ));
+            }
         }
+    }
+
+    private OrderLifecycleEvent buildOrderLifecycleEvent(Order order, Payment payment) {
+        return new OrderLifecycleEvent(
+                order.getId(),
+                order.getOrderNumber(),
+                order.getBrand().getUser().getId(),
+                order.getCustomer().getUsername(),
+                order.getCustomer().getCustomerEmail(),
+                order.getTotalPrice(),
+                order.getOrderStatus(),
+                payment.getPaymentStatus(),
+                Instant.now()
+        );
     }
 }

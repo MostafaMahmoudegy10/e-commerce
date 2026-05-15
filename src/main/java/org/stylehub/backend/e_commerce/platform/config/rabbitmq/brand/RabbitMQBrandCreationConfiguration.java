@@ -15,11 +15,25 @@ public class RabbitMQBrandCreationConfiguration {
 
     private static final String SOCIAL_MEDIA_EXCHANGE = "social_media_exchange";
     private static final String BRAND_CREATED_USER_SERVICE_QUEUE = "brand.created.user.service.q";
+    private static final String BRAND_UPDATED_USER_SERVICE_QUEUE = "brand.updated.user.service.q";
+    private static final String BRAND_DELETED_USER_SERVICE_QUEUE = "brand.deleted.user.service.q";
     private static final String BRAND_CREATED_KEY="social.brand.profile-completed";
+    private static final String BRAND_UPDATED_KEY = "social.brand.profile-updated";
+    private static final String BRAND_DELETED_KEY = "social.brand.profile-deleted";
 
     @Bean
     public Queue brandCreatedUserServiceQueue() {
         return new Queue(BRAND_CREATED_USER_SERVICE_QUEUE, true);
+    }
+
+    @Bean
+    public Queue brandUpdatedUserServiceQueue() {
+        return new Queue(BRAND_UPDATED_USER_SERVICE_QUEUE, true);
+    }
+
+    @Bean
+    public Queue brandDeletedUserServiceQueue() {
+        return new Queue(BRAND_DELETED_USER_SERVICE_QUEUE, true);
     }
 
     @Bean
@@ -30,6 +44,16 @@ public class RabbitMQBrandCreationConfiguration {
     @Bean
     public Binding brandCreatedUserServiceBinding() {
         return BindingBuilder.bind(brandCreatedUserServiceQueue()).to(brandCreatedUserServiceExchange()).with(BRAND_CREATED_KEY);
+    }
+
+    @Bean
+    public Binding brandUpdatedUserServiceBinding() {
+        return BindingBuilder.bind(brandUpdatedUserServiceQueue()).to(brandCreatedUserServiceExchange()).with(BRAND_UPDATED_KEY);
+    }
+
+    @Bean
+    public Binding brandDeletedUserServiceBinding() {
+        return BindingBuilder.bind(brandDeletedUserServiceQueue()).to(brandCreatedUserServiceExchange()).with(BRAND_DELETED_KEY);
     }
 
     @Bean

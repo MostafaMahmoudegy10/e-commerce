@@ -16,6 +16,8 @@ import java.util.UUID;
 
 public interface CategoryRepository extends JpaRepository<Category,UUID> {
 
+    long countByBrand_User_ExternalUserId(String externalId);
+
 
     // Find if a categoryName is persent or not
     boolean existsByCategoryNameEnAndBrand_UserExternalUserId(@Param("categoryEn")

@@ -2,6 +2,8 @@ package org.stylehub.backend.e_commerce.product.color.variant.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.home.dto.BrandDashboardProductStockRow;
 import org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVariant;
 
 import java.util.List;
@@ -34,5 +36,40 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
                 u.externalUserId=:brandId
         """)
     Optional<ProductVariant> findProductVariantByIdAndBrandId(UUID productVariantId, String brandId);
+
+    @Query("""
+            select coalesce(sum(pv.stock), 0)
+            from ProductVariant pv
+            join pv.productColor pc
+            join pc.product p
+            join p.brand b
+            join b.user u
+            where u.externalUserId = :externalId
+            """)
+    Long sumStockByBrandExternalId(@Param("externalId") String externalId);
+
+    @Query("""
+            select count(pv.id)
+            from ProductVariant pv
+            join pv.productColor pc
+            join pc.product p
+            join p.brand b
+            join b.user u
+            where u.externalUserId = :externalId
+              and pv.stock <= :threshold
+            """)
+    long countLowStockByBrandExternalId(@Param("externalId") String externalId, @Param("threshold") Integer threshold);
+
+    @Query("""
+            select new org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.home.dto.BrandDashboardProductStockRow(
+                pc.product.id,
+                coalesce(sum(pv.stock), 0)
+            )
+            from ProductVariant pv
+            join pv.productColor pc
+            where pc.product.id in :productIds
+            group by pc.product.id
+            """)
+    List<BrandDashboardProductStockRow> sumStockByProductIds(@Param("productIds") List<UUID> productIds);
 
 }

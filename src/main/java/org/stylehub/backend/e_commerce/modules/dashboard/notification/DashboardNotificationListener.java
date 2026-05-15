@@ -13,6 +13,9 @@ import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCancelledE
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestCreatedEvent;
 import org.stylehub.backend.e_commerce.model.gig.event.ModelGigRequestRejectedEvent;
 import org.stylehub.backend.e_commerce.modules.dashboard.notification.service.DashboardNotificationService;
+import org.stylehub.backend.e_commerce.order.event.InventoryLowStockEvent;
+import org.stylehub.backend.e_commerce.order.event.OrderCreationEvent;
+import org.stylehub.backend.e_commerce.order.event.OrderLifecycleEvent;
 import org.stylehub.backend.e_commerce.platform.config.rabbitmq.RabbitMqNames;
 
 @Component
@@ -20,6 +23,31 @@ import org.stylehub.backend.e_commerce.platform.config.rabbitmq.RabbitMqNames;
 public class DashboardNotificationListener {
 
     private final DashboardNotificationService dashboardNotificationService;
+
+    @RabbitListener(queues = RabbitMqNames.ORDER_CREATED_NOTIFICATION_QUEUE)
+    public void onOrderCreated(OrderCreationEvent event) {
+        this.dashboardNotificationService.createNotificationForOrderCreated(event);
+    }
+
+    @RabbitListener(queues = RabbitMqNames.ORDER_PAID_NOTIFICATION_QUEUE)
+    public void onOrderPaid(OrderLifecycleEvent event) {
+        this.dashboardNotificationService.createNotificationForOrderPaid(event);
+    }
+
+    @RabbitListener(queues = RabbitMqNames.ORDER_SHIPPED_NOTIFICATION_QUEUE)
+    public void onOrderShipped(OrderLifecycleEvent event) {
+        this.dashboardNotificationService.createNotificationForOrderShipped(event);
+    }
+
+    @RabbitListener(queues = RabbitMqNames.ORDER_DELIVERED_NOTIFICATION_QUEUE)
+    public void onOrderDelivered(OrderLifecycleEvent event) {
+        this.dashboardNotificationService.createNotificationForOrderDelivered(event);
+    }
+
+    @RabbitListener(queues = RabbitMqNames.INVENTORY_LOW_STOCK_NOTIFICATION_QUEUE)
+    public void onInventoryLowStock(InventoryLowStockEvent event) {
+        this.dashboardNotificationService.createNotificationForInventoryLowStock(event);
+    }
 
     @RabbitListener(queues = RabbitMqNames.MODEL_GIG_REQUEST_CREATED_NOTIFICATION_QUEUE)
     public void onRequestCreated(ModelGigRequestCreatedEvent event) {

@@ -8,13 +8,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 import org.stylehub.backend.e_commerce.cart.entity.Cart;
 import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
-import org.stylehub.backend.e_commerce.order.item.entity.OrderItem;
-import org.stylehub.backend.e_commerce.user.entity.User;
 
 import java.math.BigDecimal;
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Set;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -37,6 +34,15 @@ public class Order {
     @CreationTimestamp
     @Column(nullable = false)
     private Timestamp createdAt;
+
+    @Column(name = "shipped_at")
+    private Instant shippedAt;
+
+    @Column(name = "delivered_at")
+    private Instant deliveredAt;
+
+    @Column(name = "cancelled_at")
+    private Instant cancelledAt;
 
     @ManyToOne
     @JoinColumn(nullable = false,name = "customer_id")

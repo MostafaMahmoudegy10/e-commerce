@@ -19,6 +19,14 @@ public final class RabbitMqNames {
     //routes for order
     public static final String ORDER_CREATED_ROUTING_KEY =
             "ecommerce.order.created";
+    public static final String ORDER_PAID_ROUTING_KEY =
+            "ecommerce.order.paid";
+    public static final String ORDER_SHIPPED_ROUTING_KEY =
+            "ecommerce.order.shipped";
+    public static final String ORDER_DELIVERED_ROUTING_KEY =
+            "ecommerce.order.delivered";
+    public static final String INVENTORY_LOW_STOCK_ROUTING_KEY =
+            "ecommerce.inventory.low.stock";
 
     public static final String MODEL_GIG_REQUEST_CREATED_ROUTING_KEY =
             "ecommerce.model.gig.request.created";
@@ -49,6 +57,16 @@ public final class RabbitMqNames {
 
     public static final String MODEL_GIG_REQUEST_CREATED_NOTIFICATION_QUEUE =
             "stylehub.dashboard.model.gig.request.created.queue";
+    public static final String ORDER_CREATED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.order.created.queue";
+    public static final String ORDER_PAID_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.order.paid.queue";
+    public static final String ORDER_SHIPPED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.order.shipped.queue";
+    public static final String ORDER_DELIVERED_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.order.delivered.queue";
+    public static final String INVENTORY_LOW_STOCK_NOTIFICATION_QUEUE =
+            "stylehub.dashboard.inventory.low.stock.queue";
 
     public static final String MODEL_GIG_REQUEST_ACCEPTED_NOTIFICATION_QUEUE =
             "stylehub.dashboard.model.gig.request.accepted.queue";

@@ -15,24 +15,32 @@ public class UserSyncService {
 
     @Transactional
     public User create(String externalId,String role,String email) {
+        return sync(externalId, role, email);
+    }
 
-        if (this.userRepository.existsByExternalUserId(externalId)) {
-            throw new IllegalArgumentException("User already exists");
-        }
+    @Transactional
+    public User sync(String externalId, String role, String email) {
+        User user = this.userRepository.findByExternalUserId(externalId)
+                .orElseGet(User::new);
 
-        User newUser = new User();
-        newUser.setExternalUserId(externalId);
-        newUser.setEmail(email);
+        user.setExternalUserId(externalId);
+        user.setEmail(email);
         if(role.equals("CUSTOMER")){
-            newUser.setRole(Role.CUSTOMER);
+            user.setRole(Role.CUSTOMER);
         }else if(role.equals("BRAND_OWNER")){
-            newUser.setRole(Role.BRAND_OWNER);
+            user.setRole(Role.BRAND_OWNER);
         }else{
             throw new IllegalArgumentException("Invalid role");
         }
 
-        newUser.setIsProfileCompleted(true);
-        return this.userRepository.save(newUser);
+        user.setIsProfileCompleted(true);
+        return this.userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteByExternalId(String externalId) {
+        this.userRepository.findByExternalUserId(externalId)
+                .ifPresent(user -> this.userRepository.delete(user));
     }
 
 }

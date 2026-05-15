@@ -157,6 +157,7 @@ public class CustomerOrderService {
         OrderCreationEvent orderCreationEvent=new OrderCreationEvent(
                 order.getId(),
                 order.getOrderNumber(),
+                brand.getUser().getId(),
                 customerProfile.getId(),
                 customerProfile.getUsername(),
                 customerProfile.getCustomerEmail(),

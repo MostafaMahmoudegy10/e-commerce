@@ -13,6 +13,66 @@ import org.stylehub.backend.e_commerce.platform.config.rabbitmq.RabbitMqNames;
 public class NotificationRabbitQueues {
 
     @Bean
+    public Queue orderCreatedNotificationQueue() {
+        return new Queue(RabbitMqNames.ORDER_CREATED_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding orderCreatedNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(orderCreatedNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.ORDER_CREATED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue orderPaidNotificationQueue() {
+        return new Queue(RabbitMqNames.ORDER_PAID_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding orderPaidNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(orderPaidNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.ORDER_PAID_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue orderShippedNotificationQueue() {
+        return new Queue(RabbitMqNames.ORDER_SHIPPED_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding orderShippedNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(orderShippedNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.ORDER_SHIPPED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue orderDeliveredNotificationQueue() {
+        return new Queue(RabbitMqNames.ORDER_DELIVERED_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding orderDeliveredNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(orderDeliveredNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.ORDER_DELIVERED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue inventoryLowStockNotificationQueue() {
+        return new Queue(RabbitMqNames.INVENTORY_LOW_STOCK_NOTIFICATION_QUEUE);
+    }
+
+    @Bean
+    public Binding inventoryLowStockNotificationBinding(@Qualifier("ecommerceTopicExchange") TopicExchange exchange) {
+        return BindingBuilder.bind(inventoryLowStockNotificationQueue())
+                .to(exchange)
+                .with(RabbitMqNames.INVENTORY_LOW_STOCK_ROUTING_KEY);
+    }
+
+    @Bean
     public Queue modelGigRequestCreatedNotificationQueue() {
         return new Queue(RabbitMqNames.MODEL_GIG_REQUEST_CREATED_NOTIFICATION_QUEUE);
     }

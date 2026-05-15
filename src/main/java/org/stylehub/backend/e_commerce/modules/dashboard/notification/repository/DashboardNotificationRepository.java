@@ -14,6 +14,8 @@ public interface DashboardNotificationRepository extends JpaRepository<Dashboard
 
     Optional<DashboardNotification> findByIdAndRecipientUser_Id(UUID id, UUID userId);
 
+    List<DashboardNotification> findAllByRecipientUser_IdAndReadAtIsNull(UUID userId);
+
     long countByRecipientUser_Id(UUID userId);
 
     long countByRecipientUser_IdAndReadAtIsNull(UUID userId);

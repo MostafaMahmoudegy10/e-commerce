@@ -3,6 +3,7 @@ package org.stylehub.backend.e_commerce.brand.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.stylehub.backend.e_commerce.brand.dto.BrandProfileRes;
 import org.stylehub.backend.e_commerce.brand.entity.Brand;
 
 import java.util.Optional;
@@ -24,4 +25,18 @@ public interface BrandRepository extends JpaRepository<Brand, UUID> {
             """)
    boolean existsByUser_ExternalUserId(String externalId);
 
+    @Query("""
+        select new org.stylehub.backend.e_commerce.brand.dto.BrandProfileRes
+                (
+                    b.brandName,
+                    b.brandEmail,
+                    b.brandImageUrl
+                 ) from Brand b
+                 join b.user u 
+                 where u.externalUserId=:brandId    
+         
+        """)
+    BrandProfileRes findBrandProfile(String brandId);
+
+    void deleteByUser_ExternalUserId(String externalId);
 }
