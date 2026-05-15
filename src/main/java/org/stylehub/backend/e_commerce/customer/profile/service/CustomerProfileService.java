@@ -67,7 +67,13 @@ public class CustomerProfileService {
         profile.setLastName(request.lastName());
         profile.setPhoneNumber(request.phoneNumber());
         profile.setBio(request.bio());
-        profile.setGender(Gender.fromCode(request.gender()));
+        char gender;
+        if(request.gender()=="FEMALE"){
+            gender = 'F';
+        }else{
+            gender='M';
+        }
+        profile.setGender(Gender.fromCode(gender));
         profile.setProfileImageUrl(request.profileImageUrl());
         profile.setCustomerEmail(request.email());
 

@@ -10,7 +10,7 @@ public record CustomerProfileSetupRequest(
         String phoneNumber,
         String email,
         String bio,
-        Character gender,
+        String gender,
         String profileImageUrl
 ) {
 }
