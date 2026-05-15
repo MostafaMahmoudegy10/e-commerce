@@ -37,4 +37,6 @@ public interface FavouriteRepository extends JpaRepository<Favourite, UUID> {
     Page<WishlistView> viewWishlistForCustomer_IdInBrand_Id(UUID customerId, UUID brandId, Pageable pageable);
 
     void deleteByBrand_IdAndProduct_IdAndCustomer_Id(UUID id, UUID id1, UUID id2);
+
+    void deleteByProduct_Id(UUID productId);
 }

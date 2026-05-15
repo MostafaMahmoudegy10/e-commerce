@@ -18,6 +18,7 @@ import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.dto.product.FindAllProductForBrand;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.catalog.repository.BrandCatalogProductQueryRepository;
 import org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.home.dto.BrandDashboardProductStockRow;
+import org.stylehub.backend.e_commerce.favourite.repository.FavouriteRepository;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 import org.stylehub.backend.e_commerce.platform.media.dto.UploadResponse;
 import org.stylehub.backend.e_commerce.platform.media.service.ImageService;
@@ -46,6 +47,7 @@ public class ProductService {
     private final BrandCatalogProductQueryRepository brandCatalogProductQueryRepository;
     private final ProductColorRepository productColorRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final FavouriteRepository favouriteRepository;
 
     @Transactional
     public ProductCreationResponse addNewProduct(ProductCreationRequest request) {
@@ -139,6 +141,7 @@ public class ProductService {
     public void deleteBrandProduct(UUID productId) {
         String brandId = getCurrentBrand();
         Product product = findProductForBrand(productId, brandId);
+        this.favouriteRepository.deleteByProduct_Id(product.getId());
         safelyDeleteProductThumbnail(product.getPublicId());
         this.productRepository.delete(product);
     }
