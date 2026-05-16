@@ -14,8 +14,8 @@ public class CustomerCategoryService {
 
     private final CustomerCategoryRepo categoryRepository;
 
-    public List<CategoryNameDto> findAllParentCategories(UUID brandId, String parentCategoryName) {
-        return this.categoryRepository.findAllParentChildCategories(String.valueOf(brandId),parentCategoryName);
+    public List<CategoryNameDto> findAllParentCategories(UUID brandId, String parentCategoryName, UUID parentCategoryId) {
+        return this.categoryRepository.findAllParentChildCategories(String.valueOf(brandId), parentCategoryName, parentCategoryId);
     }
 
 

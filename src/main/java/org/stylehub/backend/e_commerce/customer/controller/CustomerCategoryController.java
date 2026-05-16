@@ -17,10 +17,12 @@ public class CustomerCategoryController {
     private final CustomerCategoryService customerCategoryService;
 
     @GetMapping()
-    public ResponseEntity<List<CategoryNameDto>>findAllParentCategories(@PathVariable UUID brandId
-        , @RequestParam(required=false,name = "parentCategory")String parentCategory
+    public ResponseEntity<List<CategoryNameDto>>findAllParentCategories(
+            @PathVariable UUID brandId,
+            @RequestParam(required=false,name = "parentCategory")String parentCategory,
+            @RequestParam(required = false, name = "parentCategoryId") UUID parentCategoryId
     ) {
-        return ResponseEntity.ok(this.customerCategoryService.findAllParentCategories(brandId,parentCategory));
+        return ResponseEntity.ok(this.customerCategoryService.findAllParentCategories(brandId, parentCategory, parentCategoryId));
     }
 
 }

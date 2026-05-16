@@ -1,7 +1,6 @@
 package org.stylehub.backend.e_commerce.customer.service;
 
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -58,7 +57,7 @@ public class CustomerProductService {
                 productColorService.findAllProductColorsByProductIdAndBrandId(productId, brandId);
 
         List<ProductColorImages> allImages =
-                productColorImagesRepo.findAllByProductColor_Id(productId);
+                productColorImagesRepo.findAllByProductColor_Product_Id(productId);
 
         Map<UUID, List<String>> imagesByColorId =
                 allImages.stream()
@@ -112,7 +111,7 @@ public class CustomerProductService {
         String thumbnail = colorDetails.stream()
                 .flatMap(color -> color.colorImages().stream())
                 .findFirst()
-                .orElse(null);
+                .orElse(product.getThumbnail());
 
         BigDecimal avgRating =this.productRatingSummaryService.getAvgRatingOfProduct(productId);
         return new ProductDetailsDto(

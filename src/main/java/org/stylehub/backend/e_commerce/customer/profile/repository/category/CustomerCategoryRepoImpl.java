@@ -12,6 +12,7 @@ import org.stylehub.backend.e_commerce.modules.catalog.category.entity.Category;
 import org.stylehub.backend.e_commerce.customer.profile.dto.category.CategoryNameDto;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class CustomerCategoryRepoImpl implements CustomerCategoryRepo {
     private final Logger log = LoggerFactory.getLogger(CustomerCategoryRepoImpl.class);
 
     @Override
-    public List<CategoryNameDto> findAllParentChildCategories(String brandId, String parentCategoryName) {
+    public List<CategoryNameDto> findAllParentChildCategories(String brandId, String parentCategoryName, UUID parentCategoryId) {
         try(EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
             CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -35,7 +36,12 @@ public class CustomerCategoryRepoImpl implements CustomerCategoryRepo {
                             .get("user")
                             .get("externalUserId"),brandId));
 
-            if(parentCategoryName!=null){
+            if(parentCategoryId != null){
+                Join<Category,Category> parentCategoryRoot = categoryRoot.join("parentCategory",JoinType.INNER);
+                predicate= cb.and(predicate,
+                        cb.equal(parentCategoryRoot.get("id"), parentCategoryId)
+                );
+            } else if(parentCategoryName!=null){
                 Join<Category,Category> parentCategoryRoot = categoryRoot.join("parentCategory",JoinType.INNER);
                 predicate= cb.and(predicate,
                         cb.equal(parentCategoryRoot.get("categoryNameEn"), parentCategoryName)
@@ -57,6 +63,7 @@ public class CustomerCategoryRepoImpl implements CustomerCategoryRepo {
             cq.select(
                     cb.construct(
                             CategoryNameDto.class,
+                            categoryRoot.get("id"),
                             categoryRoot.get("categoryNameEn"),
                             categoryRoot.get("categoryNameAr"),
                             hasChildren

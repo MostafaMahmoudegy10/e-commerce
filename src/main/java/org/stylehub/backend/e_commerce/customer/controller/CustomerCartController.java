@@ -8,10 +8,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.stylehub.backend.e_commerce.customer.dto.cart.AddToCartRequest;
 import org.stylehub.backend.e_commerce.customer.dto.cart.CartItemViewResponse;
+import org.stylehub.backend.e_commerce.customer.dto.cart.UpdateCartItemQuantityRequest;
 import org.stylehub.backend.e_commerce.customer.service.CustomerCartService;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -35,8 +35,23 @@ public class CustomerCartController {
     ,@PageableDefault(size = 10) Pageable pageable){
         return ResponseEntity.ok(this.cartService.viewCart(brandId,pageable));
     }
+
+    @PatchMapping("/{cartId}/items/{cartItemId}")
+    public ResponseEntity<Map<String, Integer>> updateCartItemQuantity(
+            @PathVariable("brandId") String brandId,
+            @PathVariable("cartId") UUID cartId,
+            @PathVariable("cartItemId") UUID cartItemId,
+            @ModelAttribute UpdateCartItemQuantityRequest request
+    ) {
+        return ResponseEntity.ok(this.cartService.changeCartItemQuantity(brandId, cartId, cartItemId, request));
+    }
+
     @DeleteMapping("/{cartId}/items/{cartItemId}")
-    public ResponseEntity<String> removeFromCart(@PathVariable("cartId") UUID cartId, @PathVariable("cartItemId") UUID cartItemId){
-        return ResponseEntity.ok(this.cartService.removeFromCart(cartId,cartItemId));
+    public ResponseEntity<String> removeFromCart(
+            @PathVariable("brandId") String brandId,
+            @PathVariable("cartId") UUID cartId,
+            @PathVariable("cartItemId") UUID cartItemId
+    ){
+        return ResponseEntity.ok(this.cartService.removeFromCart(brandId,cartId,cartItemId));
     }
 }

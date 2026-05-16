@@ -11,6 +11,8 @@ public interface ProductColorImagesRepo extends JpaRepository<ProductColorImages
 
     List<ProductColorImages> findAllByProductColor_Id(UUID productColorId);
 
+    List<ProductColorImages> findAllByProductColor_Product_Id(UUID productId);
+
     void deleteAllByProductColor_Id(UUID productColorId);
 
     @Query("""

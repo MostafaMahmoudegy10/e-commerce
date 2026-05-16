@@ -2,7 +2,6 @@ package org.stylehub.backend.e_commerce.customer.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -17,6 +16,7 @@ import org.stylehub.backend.e_commerce.cart.item.repository.CartItemRepository;
 import org.stylehub.backend.e_commerce.cart.repository.CartRepository;
 import org.stylehub.backend.e_commerce.customer.dto.cart.AddToCartRequest;
 import org.stylehub.backend.e_commerce.customer.dto.cart.CartItemViewResponse;
+import org.stylehub.backend.e_commerce.customer.dto.cart.UpdateCartItemQuantityRequest;
 import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
 import org.stylehub.backend.e_commerce.customer.profile.service.CustomerProfileService;
 import org.stylehub.backend.e_commerce.platform.dto.PageResponse;
@@ -27,7 +27,6 @@ import org.stylehub.backend.e_commerce.product.color.variant.entity.ProductVaria
 import org.stylehub.backend.e_commerce.product.color.variant.repository.ProductVariantRepository;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,10 +49,7 @@ public class CustomerCartService {
     @Transactional
     public Map<String,Integer> upsertToCart(String brandId, AddToCartRequest request) {
         LOGGER.info("Customer customer={} cart for brandId={}", currentUserProvider.getEmail(),brandId);
-        // validate the quantity of how many for one variant
-        if(request.quantity()==null||request.quantity()<0){
-            throw  new IllegalArgumentException("Quantity should be greater than 0");
-        }
+        validateAddToCartQuantity(request.quantity());
         // Now i will get customer profile based on currentUserProvider
        CustomerProfile customerProfile= customerProfileService.findCustomerProfileByExternalUserId(currentUserProvider.externalId());
 
@@ -65,17 +61,7 @@ public class CustomerCartService {
         Brand brand =this.brandService.findBrandByExternalId(brandId);
 
         // now we will search for an exists active cart for this customer to this brand
-       Optional<Cart> cartExisted=cartRepository.findCartByCartStatusAndCustomer_IdAndBrand_Id
-               (CartStatus.ACTIVE,customerProfile.getId(),brand.getId());
-
-        Cart cart = cartExisted.orElseGet(() -> {
-            Cart newCart = new Cart();
-            newCart.setCartStatus(CartStatus.ACTIVE);
-            newCart.setBrand(brand);
-            newCart.setCustomer(customerProfile);
-
-            return cartRepository.save(newCart);
-        });
+        Cart cart = findOrCreateActiveCart(customerProfile, brand);
         InsufficientStockRequestedEvent eventFirstStock= new
                 InsufficientStockRequestedEvent(
                         brand.getBrandName(),
@@ -127,14 +113,7 @@ public class CustomerCartService {
         Brand brand = this.brandService.findBrandByExternalId(brandExternalId);
 
         // first we get the cart by status-> active , cust id , brand id
-        Cart cart = this.cartRepository.findCartByCartStatusAndCustomer_IdAndBrand_Id(CartStatus.ACTIVE,customer.getId(),brand.getId())
-                .orElseGet(()->{
-                   Cart newCart= new Cart();
-                   newCart.setCartStatus(CartStatus.ACTIVE);
-                   newCart.setBrand(brand);
-                   newCart.setCustomer(customer);
-                   return this.cartRepository.save(newCart);
-                });
+        Cart cart = findOrCreateActiveCart(customer, brand);
         Page<CartItemViewResponse> response= this.cartItemRepository.findCartViewResponseByCart_Id(cart.getId(),pageable);
 
         return new PageResponse<CartItemViewResponse>(
@@ -149,8 +128,48 @@ public class CustomerCartService {
     }
 
     @Transactional
-    public  String removeFromCart(UUID cartId, UUID cartItemId) {
-        this.cartItemRepository.deleteCartItemByCart_IdAndId(cartId,cartItemId);
+    public Map<String, Integer> changeCartItemQuantity(
+            String brandId,
+            UUID cartId,
+            UUID cartItemId,
+            UpdateCartItemQuantityRequest request
+    ) {
+        validateCartItemQuantity(request.quantity());
+
+        Cart cart = findActiveCartForBrand(brandId);
+        validateRequestedCart(cart, cartId);
+
+        CartItem cartItem = findCartItem(cartId, cartItemId);
+        if (request.quantity() == 0) {
+            this.cartItemRepository.delete(cartItem);
+            return Map.of("quantity", 0);
+        }
+
+        ProductVariant variant = cartItem.getProductVariant();
+        InsufficientStockRequestedEvent event = new InsufficientStockRequestedEvent(
+                cart.getBrand().getBrandName(),
+                cart.getBrand().getBrandEmail(),
+                variant.getProductColor().getProduct().getProductNameEn(),
+                variant.getSku(),
+                request.quantity(),
+                variant.getStock(),
+                cart.getCustomer().getUsername(),
+                Instant.now()
+        );
+        stockAvailable(request.quantity(), variant.getSku(), variant.getStock(), event);
+
+        cartItem.setQuantity(request.quantity());
+        CartItem updatedCartItem = this.cartItemRepository.save(cartItem);
+        return Map.of("quantity", updatedCartItem.getQuantity());
+    }
+
+    @Transactional
+    public String removeFromCart(String brandId, UUID cartId, UUID cartItemId) {
+        Cart cart = findActiveCartForBrand(brandId);
+        validateRequestedCart(cart, cartId);
+
+        CartItem cartItem = findCartItem(cartId, cartItemId);
+        this.cartItemRepository.delete(cartItem);
         return "cart item deleted successfully";
     }
 
@@ -173,6 +192,56 @@ public class CustomerCartService {
         return cartItemRepository.save(cartItem);
     }
 
+    private void validateAddToCartQuantity(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("Quantity should be greater than 0");
+        }
+    }
+
+    private void validateCartItemQuantity(Integer quantity) {
+        if (quantity == null || quantity < 0) {
+            throw new IllegalArgumentException("Quantity should be greater than or equal to 0");
+        }
+    }
+
+    private Cart findOrCreateActiveCart(CustomerProfile customerProfile, Brand brand) {
+        Optional<Cart> cartExisted = this.cartRepository.findCartByCartStatusAndCustomer_IdAndBrand_Id(
+                CartStatus.ACTIVE,
+                customerProfile.getId(),
+                brand.getId()
+        );
+
+        return cartExisted.orElseGet(() -> {
+            Cart newCart = new Cart();
+            newCart.setCartStatus(CartStatus.ACTIVE);
+            newCart.setBrand(brand);
+            newCart.setCustomer(customerProfile);
+            return this.cartRepository.save(newCart);
+        });
+    }
+
+    private Cart findActiveCartForBrand(String brandExternalId) {
+        CustomerProfile customer = this.customerProfileService.findCustomerProfileByExternalUserId(currentUserProvider.externalId());
+        Brand brand = this.brandService.findBrandByExternalId(brandExternalId);
+
+        return this.cartRepository.findCartByCartStatusAndCustomer_IdAndBrand_Id(
+                        CartStatus.ACTIVE,
+                        customer.getId(),
+                        brand.getId()
+                )
+                .orElseThrow(() -> new IllegalArgumentException("Active cart not found"));
+    }
+
+    private void validateRequestedCart(Cart cart, UUID requestedCartId) {
+        if (!cart.getId().equals(requestedCartId)) {
+            throw new IllegalArgumentException("Cart not found for this brand");
+        }
+    }
+
+    private CartItem findCartItem(UUID cartId, UUID cartItemId) {
+        return this.cartItemRepository.findByIdAndCart_Id(cartItemId, cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Cart item not found"));
+    }
 
 
 }
