@@ -69,9 +69,6 @@ public class BrandService {
         if (brandCreationRequest.bio() == null) {
             throw new IllegalArgumentException("Bio is required.");
         }
-        if (brandCreationRequest.websiteUrl() == null) {
-            throw new IllegalArgumentException("Website URL is required.");
-        }
         if (brandCreationRequest.brandName() == null) {
             throw new IllegalArgumentException("brandName is required.");
         }
