@@ -3,6 +3,7 @@ package org.stylehub.backend.e_commerce.model.profile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.stylehub.backend.e_commerce.model.profile.dto.ModelAvailableForRequest;
 import org.stylehub.backend.e_commerce.model.profile.dto.ModelCreationRequest;
 import org.stylehub.backend.e_commerce.model.profile.dto.ModelCreationResponse;
+import org.stylehub.backend.e_commerce.model.profile.dto.ModelProfileResponse;
 import org.stylehub.backend.e_commerce.model.profile.service.ModelService;
 
 @RestController
@@ -20,6 +22,11 @@ import org.stylehub.backend.e_commerce.model.profile.service.ModelService;
 public class ModelProfileController {
 
     private final ModelService modelService;
+
+    @GetMapping("/me")
+    public ResponseEntity<ModelProfileResponse> getCurrentModelProfile() {
+        return ResponseEntity.ok(this.modelService.getCurrentModelProfile());
+    }
 
     @PostMapping
     public ResponseEntity<ModelCreationResponse> createModel(@ModelAttribute ModelCreationRequest modelCreationRequest) {

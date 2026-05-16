@@ -7,8 +7,12 @@ import org.springframework.web.multipart.MultipartFile;
 import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
 import org.stylehub.backend.e_commerce.customer.profile.service.CustomerProfileService;
 import org.stylehub.backend.e_commerce.model.profile.dto.ModelAvailableForRequest;
+import org.stylehub.backend.e_commerce.model.profile.dto.ModelAvailableForView;
 import org.stylehub.backend.e_commerce.model.profile.dto.ModelCreationRequest;
 import org.stylehub.backend.e_commerce.model.profile.dto.ModelCreationResponse;
+import org.stylehub.backend.e_commerce.model.profile.dto.ModelCustomerSummaryResponse;
+import org.stylehub.backend.e_commerce.model.profile.dto.ModelProfileImageRow;
+import org.stylehub.backend.e_commerce.model.profile.dto.ModelProfileResponse;
 import org.stylehub.backend.e_commerce.model.profile.entity.ModelProfile;
 import org.stylehub.backend.e_commerce.model.profile.entity.ModelProfileAvailableFor;
 import org.stylehub.backend.e_commerce.model.profile.entity.ModelProfileImages;
@@ -34,6 +38,53 @@ public class ModelService {
     private final CustomerProfileService customerProfileService;
     private final ImageService imageService;
     private final ModelProfileAccessService modelProfileAccessService;
+
+    public ModelProfileResponse getCurrentModelProfile() {
+        ModelProfile modelProfile = this.modelProfileAccessService.requireCurrentModelProfile();
+        CustomerProfile customerProfile =
+                this.customerProfileService.findCustomerProfileByExternalUserId(this.currentUserProvider.externalId());
+
+        List<String> modelImages = this.modelProfileImagesRepository
+                .findImagesByModelProfileIds(List.of(modelProfile.getId()))
+                .stream()
+                .map(ModelProfileImageRow::profileImage)
+                .toList();
+
+        List<ModelAvailableForView> availableFor = this.modelProfileAvailableForRepository
+                .findAvailableForByModelProfileIds(List.of(modelProfile.getId()))
+                .stream()
+                .map(row -> new ModelAvailableForView(row.availableFor(), row.pricePerSession()))
+                .toList();
+
+        return new ModelProfileResponse(
+                modelProfile.getId(),
+                modelProfile.getModelName(),
+                modelProfile.getModelEmail(),
+                modelProfile.getBio(),
+                modelProfile.getCity(),
+                modelProfile.getAge(),
+                modelProfile.getHeightCm(),
+                modelProfile.getWeightKg(),
+                modelProfile.getHairColor(),
+                modelProfile.getRatingAvg(),
+                modelProfile.getRatingCount(),
+                modelProfile.getIsAvailable(),
+                modelProfile.getBodyType(),
+                modelProfile.getSkinTone(),
+                modelProfile.getGender(),
+                modelImages,
+                availableFor,
+                new ModelCustomerSummaryResponse(
+                        customerProfile.getId(),
+                        customerProfile.getUsername(),
+                        customerProfile.getFirstName(),
+                        customerProfile.getLastName(),
+                        customerProfile.getCustomerEmail(),
+                        customerProfile.getPhoneNumber(),
+                        customerProfile.getProfileImageUrl()
+                )
+        );
+    }
 
     @Transactional
     public ModelCreationResponse createModel(ModelCreationRequest request) {
