@@ -54,8 +54,8 @@ public class DashboardAuthContextService {
         if (role == Role.BRAND_OWNER) {
             return "BRAND";
         }
-        if (role == Role.CUSTOMER && hasModelProfile) {
-            return "MODEL";
+        if (role == Role.CUSTOMER) {
+            return hasModelProfile ? "MODEL" : "MODEL_ONBOARDING";
         }
         return "CUSTOMER";
     }

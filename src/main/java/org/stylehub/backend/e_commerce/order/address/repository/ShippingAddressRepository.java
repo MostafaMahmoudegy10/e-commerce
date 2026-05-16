@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface ShippingAddressRepository extends JpaRepository<ShippingAddress, UUID> {
 
     Optional<ShippingAddress> findByCustomer_Id(UUID customerId);
+    Optional<ShippingAddress> findByOrder_Id(UUID orderId);
 }

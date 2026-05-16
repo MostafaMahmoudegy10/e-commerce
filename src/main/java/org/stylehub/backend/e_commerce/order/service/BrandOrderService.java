@@ -110,7 +110,7 @@ public class BrandOrderService {
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
 
         Payment payment = this.paymentRepository.findByOrder_Id(orderId).orElse(null);
-        ShippingAddress shippingAddress = this.shippingAddressRepository.findByCustomer_Id(order.getCustomer().getId())
+        ShippingAddress shippingAddress = this.shippingAddressRepository.findByOrder_Id(order.getId())
                 .orElse(null);
         List<OrderItem> orderItems = this.orderItemRepository.findAllWithDetailsByOrderId(orderId);
 

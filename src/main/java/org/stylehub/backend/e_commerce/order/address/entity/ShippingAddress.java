@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
+import org.stylehub.backend.e_commerce.order.entity.Order;
 
 import java.util.UUID;
 
@@ -32,9 +33,13 @@ public class ShippingAddress {
     @Column(nullable = false,name = "building_number")
     private String buildingNumber;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id",nullable = false)
     private CustomerProfile customer;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", unique = true)
+    private Order order;
 
     public String addressEn(String streetEn,String cityEn,String buildingNumber){
          return streetEn+" "+cityEn+" "+buildingNumber;

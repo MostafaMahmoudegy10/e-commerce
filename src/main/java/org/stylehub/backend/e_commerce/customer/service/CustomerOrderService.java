@@ -16,6 +16,7 @@ import org.stylehub.backend.e_commerce.customer.dto.order.CheckoutResponse;
 import org.stylehub.backend.e_commerce.customer.dto.order.OrderCreationRequest;
 import org.stylehub.backend.e_commerce.customer.profile.entity.CustomerProfile;
 import org.stylehub.backend.e_commerce.customer.profile.service.CustomerProfileService;
+import org.stylehub.backend.e_commerce.order.address.entity.ShippingAddress;
 import org.stylehub.backend.e_commerce.order.address.repository.ShippingAddressRepository;
 import org.stylehub.backend.e_commerce.order.entity.Order;
 import org.stylehub.backend.e_commerce.order.entity.OrderStatus;
@@ -100,6 +101,7 @@ public class CustomerOrderService {
             Order order= orderRepository.save(newOrder);
 
             LOGGER.info("ORDER CREATED={}",order.getId());
+            saveShippingAddressSnapshot(orderCreationRequest, customerProfile, order);
             // now convert to order items
             this.orderItemService.saveAllOrderItems(cart.getId(),order);
             this.addCreationEvent(order,customerProfile,brand);
@@ -116,6 +118,48 @@ public class CustomerOrderService {
         );
 
     }
+
+    private void saveShippingAddressSnapshot(
+            OrderCreationRequest orderCreationRequest,
+            CustomerProfile customerProfile,
+            Order order
+    ) {
+        validateShippingAddress(orderCreationRequest);
+
+        ShippingAddress shippingAddress = new ShippingAddress();
+        shippingAddress.setCustomer(customerProfile);
+        shippingAddress.setOrder(order);
+        shippingAddress.setStreetEn(orderCreationRequest.streetEn().trim());
+        shippingAddress.setStreetAr(orderCreationRequest.streetAr().trim());
+        shippingAddress.setCityEn(orderCreationRequest.cityEn().trim());
+        shippingAddress.setCityAr(orderCreationRequest.cityAr().trim());
+        shippingAddress.setBuildingNumber(orderCreationRequest.buildingNumber().trim());
+
+        this.shippingAddressRepository.save(shippingAddress);
+    }
+
+    private void validateShippingAddress(OrderCreationRequest orderCreationRequest) {
+        if (isBlank(orderCreationRequest.streetEn())) {
+            throw new IllegalArgumentException("streetEn is required");
+        }
+        if (isBlank(orderCreationRequest.streetAr())) {
+            throw new IllegalArgumentException("streetAr is required");
+        }
+        if (isBlank(orderCreationRequest.cityEn())) {
+            throw new IllegalArgumentException("cityEn is required");
+        }
+        if (isBlank(orderCreationRequest.cityAr())) {
+            throw new IllegalArgumentException("cityAr is required");
+        }
+        if (isBlank(orderCreationRequest.buildingNumber())) {
+            throw new IllegalArgumentException("buildingNumber is required");
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
     private void validateStock(List<CartItem> cartItems,Brand brand,CustomerProfile customerProfile){
         cartItems.stream().forEach(cartItem->{
             // we get the variant
