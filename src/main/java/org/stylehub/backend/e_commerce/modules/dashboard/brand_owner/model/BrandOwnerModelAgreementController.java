@@ -1,5 +1,9 @@
 package org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.model;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -35,6 +39,7 @@ import java.util.UUID;
 @RequestMapping("api/v1/brands/model-agreements")
 @PreAuthorize("hasRole('BRAND_OWNER')")
 @RequiredArgsConstructor
+@Tag(name = "Brand Model Collaboration", description = "Manage collaboration requests, agreements, submissions, payments, and reviews between brands and models.")
 public class BrandOwnerModelAgreementController {
 
     private final ModelAgreementService modelAgreementService;
@@ -60,6 +65,14 @@ public class BrandOwnerModelAgreementController {
         return ResponseEntity.ok(this.modelAgreementSubmissionService.findBrandSubmissions(agreementId));
     }
 
+    @Operation(summary = "Approve agreement submission", description = "Approves a model's submitted deliverables for a brand-model agreement.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Agreement submission approved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid agreement or submission state transition"),
+            @ApiResponse(responseCode = "401", description = "JWT token is missing or invalid"),
+            @ApiResponse(responseCode = "403", description = "Authenticated user cannot approve this submission"),
+            @ApiResponse(responseCode = "404", description = "Agreement or submission was not found")
+    })
     @PostMapping("/{agreementId}/submissions/{submissionId}/approve")
     public ResponseEntity<GigAgreementSubmissionDecisionResponse> approveSubmission(
             @PathVariable UUID agreementId,
@@ -68,6 +81,14 @@ public class BrandOwnerModelAgreementController {
         return ResponseEntity.ok(this.modelAgreementSubmissionService.approveSubmission(agreementId, submissionId));
     }
 
+    @Operation(summary = "Request agreement revision", description = "Requests changes for a model agreement submission.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Revision requested successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid review data or submission state transition"),
+            @ApiResponse(responseCode = "401", description = "JWT token is missing or invalid"),
+            @ApiResponse(responseCode = "403", description = "Authenticated user cannot review this submission"),
+            @ApiResponse(responseCode = "404", description = "Agreement or submission was not found")
+    })
     @PostMapping("/{agreementId}/submissions/{submissionId}/request-revision")
     public ResponseEntity<GigAgreementSubmissionDecisionResponse> requestRevision(
             @PathVariable UUID agreementId,
@@ -82,6 +103,14 @@ public class BrandOwnerModelAgreementController {
         return ResponseEntity.ok(this.modelAgreementPaymentService.findBrandPayment(agreementId));
     }
 
+    @Operation(summary = "Mark model agreement payment success", description = "Marks a model collaboration agreement payment as successful.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Agreement payment marked as successful"),
+            @ApiResponse(responseCode = "400", description = "Invalid payment state transition"),
+            @ApiResponse(responseCode = "401", description = "JWT token is missing or invalid"),
+            @ApiResponse(responseCode = "403", description = "Authenticated user cannot update this payment"),
+            @ApiResponse(responseCode = "404", description = "Agreement payment was not found")
+    })
     @PostMapping("/{agreementId}/payments/success")
     public ResponseEntity<GigAgreementPaymentResponse> markPaymentSuccessful(
             @PathVariable UUID agreementId,
@@ -90,6 +119,14 @@ public class BrandOwnerModelAgreementController {
         return ResponseEntity.ok(this.modelAgreementPaymentService.markPaymentSuccessful(agreementId, request));
     }
 
+    @Operation(summary = "Mark model agreement payment failure", description = "Marks a model collaboration agreement payment as failed.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Agreement payment marked as failed"),
+            @ApiResponse(responseCode = "400", description = "Invalid payment state transition"),
+            @ApiResponse(responseCode = "401", description = "JWT token is missing or invalid"),
+            @ApiResponse(responseCode = "403", description = "Authenticated user cannot update this payment"),
+            @ApiResponse(responseCode = "404", description = "Agreement payment was not found")
+    })
     @PostMapping("/{agreementId}/payments/failure")
     public ResponseEntity<GigAgreementPaymentResponse> markPaymentFailed(
             @PathVariable UUID agreementId,
@@ -103,6 +140,14 @@ public class BrandOwnerModelAgreementController {
         return ResponseEntity.ok(this.modelReviewService.findBrandAgreementReview(agreementId));
     }
 
+    @Operation(summary = "Create or update model agreement review", description = "Creates or updates the brand's review for a completed model collaboration agreement.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Agreement review saved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid review data or business validation error"),
+            @ApiResponse(responseCode = "401", description = "JWT token is missing or invalid"),
+            @ApiResponse(responseCode = "403", description = "Authenticated user cannot review this agreement"),
+            @ApiResponse(responseCode = "404", description = "Agreement was not found")
+    })
     @PostMapping("/{agreementId}/review")
     public ResponseEntity<ModelAgreementReviewResponse> upsertAgreementReview(
             @PathVariable UUID agreementId,

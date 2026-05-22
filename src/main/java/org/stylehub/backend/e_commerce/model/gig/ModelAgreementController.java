@@ -1,5 +1,9 @@
 package org.stylehub.backend.e_commerce.model.gig;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -30,6 +34,7 @@ import java.util.UUID;
 @RequestMapping("api/v1/model/agreements")
 @PreAuthorize("hasRole('CUSTOMER')")
 @RequiredArgsConstructor
+@Tag(name = "Brand Model Collaboration", description = "Manage collaboration requests, agreements, submissions, payments, and reviews between brands and models.")
 public class ModelAgreementController {
 
     private final ModelAgreementService modelAgreementService;
@@ -54,6 +59,14 @@ public class ModelAgreementController {
         return ResponseEntity.ok(this.modelAgreementSubmissionService.findModelSubmissions(agreementId));
     }
 
+    @Operation(summary = "Submit agreement deliverables", description = "Allows the model to upload deliverables for an active brand-model agreement.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Agreement submission created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid submission data or business validation error"),
+            @ApiResponse(responseCode = "401", description = "JWT token is missing or invalid"),
+            @ApiResponse(responseCode = "403", description = "Authenticated user cannot submit for this agreement"),
+            @ApiResponse(responseCode = "404", description = "Agreement was not found")
+    })
     @PostMapping(value = "/{agreementId}/submissions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GigAgreementSubmissionViewResponse> createSubmission(
             @PathVariable UUID agreementId,

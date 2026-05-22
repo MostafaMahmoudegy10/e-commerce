@@ -1,5 +1,6 @@
 package org.stylehub.backend.e_commerce.customer.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @RequestMapping("api/v1/customer/brands/{brandId}/wishlist")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('CUSTOMER')")
+@Tag(name = "Customer Wishlist", description = "Save, view, and remove favorite products for a customer.")
 public class CustomerWishlistController{
 
     private final CustomerWishlistService customerWishlistService;

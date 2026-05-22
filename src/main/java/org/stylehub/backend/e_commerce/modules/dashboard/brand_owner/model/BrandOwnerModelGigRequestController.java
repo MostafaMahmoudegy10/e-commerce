@@ -1,5 +1,9 @@
 package org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.model;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -26,6 +30,7 @@ import java.util.UUID;
 @RequestMapping("api/v1/brands/models")
 @PreAuthorize("hasRole('BRAND_OWNER')")
 @RequiredArgsConstructor
+@Tag(name = "Brand Model Collaboration", description = "Manage collaboration requests, agreements, submissions, payments, and reviews between brands and models.")
 public class BrandOwnerModelGigRequestController {
 
     private final ModelGigRequestService modelGigRequestService;
@@ -43,6 +48,14 @@ public class BrandOwnerModelGigRequestController {
         return ResponseEntity.ok(this.modelGigRequestService.findBrandRequestDetails(requestId));
     }
 
+    @Operation(summary = "Send collaboration request", description = "Sends a collaboration request from the authenticated brand to a model.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Collaboration request sent successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request data or business validation error"),
+            @ApiResponse(responseCode = "401", description = "JWT token is missing or invalid"),
+            @ApiResponse(responseCode = "403", description = "Authenticated user is not a brand owner"),
+            @ApiResponse(responseCode = "404", description = "Model profile was not found")
+    })
     @PostMapping("/{modelId}/requests")
     public ResponseEntity<ModelGigRequestCreationResponse> createRequest(
             @PathVariable UUID modelId,

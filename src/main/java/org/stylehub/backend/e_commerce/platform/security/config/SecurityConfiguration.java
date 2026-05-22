@@ -32,7 +32,15 @@ public class SecurityConfiguration {
                 ))
                 .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/", "/api/v1/public/**", "/error").permitAll()
+                .requestMatchers(
+                        "/",
+                        "/api/v1/public/**",
+                        "/error",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**"
+                ).permitAll()
                 .requestMatchers("/api/v1/brands/**").hasRole("BRAND_OWNER") // a brand owner
                 .anyRequest().authenticated()
                  ).oauth2ResourceServer(o->

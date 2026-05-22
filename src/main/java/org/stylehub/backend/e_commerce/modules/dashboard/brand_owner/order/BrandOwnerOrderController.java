@@ -1,5 +1,6 @@
 package org.stylehub.backend.e_commerce.modules.dashboard.brand_owner.order;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -25,6 +26,7 @@ import java.util.UUID;
 @RequestMapping("api/v1/brands/orders")
 @PreAuthorize("hasRole('BRAND_OWNER')")
 @RequiredArgsConstructor
+@Tag(name = "Brand Orders Dashboard", description = "Brand dashboard order list, stats, details, and fulfillment actions.")
 public class BrandOwnerOrderController {
 
     private final BrandOrderService brandOrderService;
