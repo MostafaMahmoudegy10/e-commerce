@@ -57,26 +57,32 @@ The backend supports the main flows needed for a real social commerce platform:
 
 ## Swagger Documentation
 
-After running the application, Swagger UI is available at:
+The deployed backend base URL is:
 
 ```text
-http://localhost:8080/swagger-ui/index.html
+https://ecommerce-app-e6303c36e118.herokuapp.com/api/v1
+```
+
+Swagger UI is available at:
+
+```text
+https://ecommerce-app-e6303c36e118.herokuapp.com/swagger-ui/index.html
 ```
 
 OpenAPI JSON is available at:
 
 ```text
-http://localhost:8080/v3/api-docs
+https://ecommerce-app-e6303c36e118.herokuapp.com/v3/api-docs
 ```
 
 Grouped OpenAPI docs:
 
 ```text
-http://localhost:8080/v3/api-docs/public-apis
-http://localhost:8080/v3/api-docs/customer-apis
-http://localhost:8080/v3/api-docs/brand-dashboard-apis
-http://localhost:8080/v3/api-docs/model-apis
-http://localhost:8080/v3/api-docs/orders-payments-apis
+https://ecommerce-app-e6303c36e118.herokuapp.com/v3/api-docs/public-apis
+https://ecommerce-app-e6303c36e118.herokuapp.com/v3/api-docs/customer-apis
+https://ecommerce-app-e6303c36e118.herokuapp.com/v3/api-docs/brand-dashboard-apis
+https://ecommerce-app-e6303c36e118.herokuapp.com/v3/api-docs/model-apis
+https://ecommerce-app-e6303c36e118.herokuapp.com/v3/api-docs/orders-payments-apis
 ```
 
 Swagger includes JWT Bearer authentication. Use the `Authorize` button and provide a valid JWT token to test protected endpoints.
@@ -115,7 +121,7 @@ CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 MAIL_USERNAME=your-mail-username
 MAIL_PASSWORD=your-mail-password
 
-API_BASE_URL=http://localhost:8080
+API_BASE_URL=https://ecommerce-app-e6303c36e118.herokuapp.com
 DASHBOARD_BASE_URL=http://localhost:3000
 STOREFRONT_BASE_URL=http://localhost:3000
 EMAIL_REVIEW_TOKEN_SECRET=change-this-secret
